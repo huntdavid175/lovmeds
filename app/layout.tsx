@@ -39,9 +39,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${headingFont.variable} antialiased  bg-[#F7F7F7]`}
       >
         <CartProvider>
-          <Header />
-          {children}
-          <Footer />
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
           <CartDrawer />
         </CartProvider>
       </body>

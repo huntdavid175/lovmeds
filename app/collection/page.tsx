@@ -1,9 +1,14 @@
 import React from "react";
+import type { Metadata } from "next";
 import BrandVideo from "../components/BrandVideo";
 import Testimonials from "../components/Testimonials";
 // import CollectionHero from "../components/CollectionHero";
 import ShopHero from "../components/ShopHero";
 import SkinConcerns from "../components/SkinConcerns";
+
+export const metadata: Metadata = {
+  title: "Collections | Revive Botanicals",
+};
 
 const page = () => {
   return (

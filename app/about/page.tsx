@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import BrandVideo from "../components/BrandVideo";
 import Testimonials from "../components/Testimonials";
 import AboutMission from "../components/AboutMission";
 import AboutVision from "../components/AboutVision";
 import AboutStory from "../components/AboutStory";
+
+export const metadata: Metadata = {
+  title: "About | Revive Botanicals",
+};
 
 export default function AboutPage() {
   return (

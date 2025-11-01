@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import Hero from "./components/Hero";
 import Benefits from "./components/Benefits";
 import BestSellers from "./components/BestSellers";
 import SkinConcerns from "./components/SkinConcerns";
 import BrandVideo from "./components/BrandVideo";
 import Testimonials from "./components/Testimonials";
+
+export const metadata: Metadata = {
+  title: "Home | Revive Botanicals",
+};
 
 export default function Home() {
   return (

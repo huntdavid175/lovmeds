@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -10,7 +11,7 @@ export default function Footer() {
           className="grid grid-cols-1 lg:grid-cols-3 gap-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
+          transition={{ duration: 0.9 }}
           viewport={{ once: true, amount: 0.2 }}
         >
           {/* Left: Brand and signup */}
@@ -99,13 +100,28 @@ export default function Footer() {
               <p className="text-white/80 mb-4">Company</p>
               <ul className="space-y-3 text-white">
                 <li>
-                  <a href="#">Shop</a>
+                  <Link
+                    href="/shop"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    Shop
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">Collection</a>
+                  <Link
+                    href="/collection"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    Collection
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">About</a>
+                  <Link
+                    href="/about"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    About
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -113,16 +129,36 @@ export default function Footer() {
               <p className="text-white/80 mb-4">Policy</p>
               <ul className="space-y-3 text-white">
                 <li>
-                  <a href="#">Shipping Policy</a>
+                  <Link
+                    href="/shipping-policy"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    Shipping Policy
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">Return policy</a>
+                  <Link
+                    href="/return-policy"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    Return policy
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">Privacy policy</a>
+                  <Link
+                    href="/privacy-policy"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    Privacy policy
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">Terms of Service</a>
+                  <Link
+                    href="/terms-of-service"
+                    className="transition-colors hover:text-[#6EA53A]"
+                  >
+                    Terms of Service
+                  </Link>
                 </li>
               </ul>
             </div>
