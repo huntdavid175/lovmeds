@@ -53,7 +53,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeItem = (id: string) =>
-    setItems((prev) => prev.filter((p) => p.id !== id));
+    setItems((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      if (next.length === 0) setIsOpen(false);
+      return next;
+    });
 
   const updateQty = (id: string, qty: number) =>
     setItems((prev) => prev.map((p) => (p.id === id ? { ...p, qty } : p)));

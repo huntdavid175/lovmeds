@@ -15,8 +15,8 @@ export async function gqlRequest<T>(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
-    // Caching control: default ISR 60s, overridable per call
-    next: { revalidate: options?.revalidate ?? 60 },
+    // Caching control: default ISR 3600s (1 hour), overridable per call
+    next: { revalidate: options?.revalidate ?? 3600 },
     cache: options?.cache,
   });
 

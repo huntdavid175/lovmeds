@@ -88,7 +88,9 @@ export default function Header() {
           {/* </button> */}
           <button
             aria-label="Cart"
-            onClick={open}
+            onClick={() => {
+              if (count > 0) open();
+            }}
             className="relative h-10 w-10 rounded-full border border-black/10 flex items-center justify-center"
           >
             {/* Cart icon */}
@@ -107,7 +109,7 @@ export default function Header() {
               <path d="M1 1h4l2.68 12.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
             {count > 0 && (
-              <span className="absolute -top-2 -right-2 h-5 min-w-5 px-1 rounded-full bg-black/5 text-black text-xs flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 h-5 min-w-5 px-1 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
                 {count}
               </span>
             )}

@@ -50,7 +50,7 @@ const ABOUT_QUERY = `
   }
 `;
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function AboutPage() {
   let missionText: string | undefined;

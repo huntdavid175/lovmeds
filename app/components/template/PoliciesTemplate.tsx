@@ -18,7 +18,7 @@ export default function PoliciesTemplate({
           <h1 className="font-heading text-5xl md:text-7xl text-black ls-title mb-6 md:mb-10">
             {title}
           </h1>
-          <div className="prose prose-neutral max-w-none text-black/70 leading-relaxed md:leading-8">
+          <div className="prose prose-neutral max-w-none text-black/70 leading-relaxed md:leading-8 policy-content">
             {children}
           </div>
         </div>

@@ -60,3 +60,19 @@ body {
     transform: translateX(-50%);
   }
 }
+
+/* Policies content heading style to match hero titles */
+.policy-content h2 {
+  font-family: var(--font-heading), serif;
+  color: #000;
+  letter-spacing: -2px;
+  line-height: 1.1;
+  font-size: 2rem; /* slightly smaller on mobile */
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+@media (min-width: 768px) {
+  .policy-content h2 {
+    font-size: 3rem; /* reduced from 7xl-scale */
+  }
+}

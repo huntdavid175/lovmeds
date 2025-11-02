@@ -13,14 +13,6 @@ export default function AboutMission({
   text?: string;
   imageUrl?: string;
 }) {
-  const container = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, staggerChildren: 0.12 },
-    },
-  };
   const item = {
     hidden: { opacity: 0, y: 16 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -28,13 +20,16 @@ export default function AboutMission({
   return (
     <motion.section
       className="mt-4"
-      initial="hidden"
-      animate="visible"
-      variants={container}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
         <motion.div
           className="bg-white rounded-3xl overflow-hidden p-6 md:p-10"
+          initial={false}
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.1, margin: "-80px 0px -80px 0px" }}
           variants={item}
         >
           <h1 className="font-heading text-5xl md:text-7xl leading-tight tracking-tight text-black ls-title">
@@ -60,6 +55,9 @@ export default function AboutMission({
 
         <motion.div
           className="bg-white rounded-3xl overflow-hidden"
+          initial={false}
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.1, margin: "-80px 0px -80px 0px" }}
           variants={item}
         >
           <div className="relative w-full h-full min-h-[420px] md:min-h-[520px]">

@@ -4,7 +4,7 @@ import Benefits from "@/app/components/Benefits";
 import { gqlRequest } from "@/app/lib/wpClient";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
 
-export const revalidate = 60; // ISR window (seconds)
+export const revalidate = 3600; // ISR window (1 hour)
 
 export async function generateMetadata({
   params,

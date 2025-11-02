@@ -27,9 +27,9 @@ export default function AboutVision({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
         <motion.div
           className="bg-white rounded-3xl overflow-hidden order-1"
-          initial="hidden"
+          initial={false}
           whileInView="visible"
-          viewport={{ once: false, amount: 0, margin: "-100px 0px -100px 0px" }}
+          viewport={{ once: false, amount: 0.1, margin: "-80px 0px -80px 0px" }}
           variants={item}
         >
           <div className="relative w-full h-full min-h-[420px] md:min-h-[520px]">
@@ -46,9 +46,9 @@ export default function AboutVision({
 
         <motion.div
           className="bg-white rounded-3xl overflow-hidden p-6 md:p-10 order-2"
-          initial="hidden"
+          initial={false}
           whileInView="visible"
-          viewport={{ once: false, amount: 0, margin: "-100px 0px -100px 0px" }}
+          viewport={{ once: false, amount: 0.1, margin: "-80px 0px -80px 0px" }}
           variants={item}
         >
           <h2 className="font-heading text-5xl md:text-7xl leading-tight tracking-tight text-black ls-title">
