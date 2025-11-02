@@ -113,7 +113,9 @@ export default async function ShopGrid() {
         }
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    throw e;
+  }
 
   const products = Array.from(byId.values());
   const filters = Array.from(filterMap, ([key, label]) => ({ key, label }));

@@ -27,6 +27,7 @@ export default async function CollectionPage({
 }) {
   const awaited = await params;
   const slug = typeof awaited?.id === "string" ? awaited.id : "";
+
   return (
     <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">
       <CollectionHero />

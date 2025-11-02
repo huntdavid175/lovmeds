@@ -67,8 +67,14 @@ export default async function CollectionGrid({
 }: {
   categoryParam: string;
 }) {
-  // Use category slug directly for WooGraphQL
-  const category = (categoryParam || "").trim().toLowerCase();
+  // Normalize slug: lowercase and remove hyphens for the query; keep original for fallback
+  const slugOriginal = decodeURIComponent(
+    (categoryParam || "").trim()
+  ).toLowerCase();
+  const category = slugOriginal.replace(/-/g, "");
+
+  console.log("category(normalized)", category);
+  console.log("slugOriginal", slugOriginal);
 
   let items: CollectionProduct[] = [];
   try {
@@ -79,7 +85,7 @@ export default async function CollectionGrid({
     let edges = data?.products?.edges || [];
     if (edges.length === 0) {
       const alt = await gqlRequest<any>(CATEGORY_FALLBACK_QUERY, {
-        slug: [category],
+        slug: [slugOriginal],
       });
       edges = alt?.productCategories?.nodes?.[0]?.products?.edges || [];
     }
@@ -92,7 +98,9 @@ export default async function CollectionGrid({
         typeof priceRaw === "string" ? priceRaw : `$${priceRaw}`;
       return { title, price, imageUrl, rating: 5 };
     });
-  } catch (_) {}
+  } catch (e) {
+    throw e;
+  }
 
   return <CollectionGridClient items={items} />;
 }

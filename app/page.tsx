@@ -24,6 +24,18 @@ type HomeQuery = {
   };
 };
 
+type AvatarsQuery = {
+  post?: {
+    id?: string;
+    avatars?: {
+      customerImage1?: { node?: { sourceUrl?: string | null } | null } | null;
+      customerImage2?: { node?: { sourceUrl?: string | null } | null } | null;
+      customerImage3?: { node?: { sourceUrl?: string | null } | null } | null;
+      customerImage4?: { node?: { sourceUrl?: string | null } | null } | null;
+    } | null;
+  } | null;
+};
+
 const HOME_QUERY = `
   query NewQuery {
     pages(where: {title: "home"}) {
@@ -39,16 +51,47 @@ const HOME_QUERY = `
   }
 `;
 
+const AVATARS_QUERY = `
+  query NewQuery {
+    post(id: "customer-avatars", idType: SLUG) {
+      id
+      avatars {
+        customerImage1 { node { sourceUrl } }
+        customerImage2 { node { sourceUrl } }
+        customerImage3 { node { sourceUrl } }
+        customerImage4 { node { sourceUrl } }
+      }
+    }
+  }
+`;
+
 export default async function Home() {
   let heroTitle: string | undefined;
+  let heroImage: string | undefined;
+  let avatars: string[] | undefined;
   try {
-    const data = await gqlRequest<HomeQuery>(HOME_QUERY);
-    const first = data?.pages?.edges?.[0]?.node;
+    const [home, av] = await Promise.all([
+      gqlRequest<HomeQuery>(HOME_QUERY),
+      gqlRequest<AvatarsQuery>(AVATARS_QUERY),
+    ]);
+    const first = home?.pages?.edges?.[0]?.node;
     heroTitle = first?.homeFields?.herotitle ?? undefined;
-    const heroImage = first?.featuredImage?.node?.sourceUrl ?? undefined;
+    heroImage = first?.featuredImage?.node?.sourceUrl ?? undefined;
+    const a = av?.post?.avatars;
+    const imgs = [
+      a?.customerImage1?.node?.sourceUrl,
+      a?.customerImage2?.node?.sourceUrl,
+      a?.customerImage3?.node?.sourceUrl,
+      a?.customerImage4?.node?.sourceUrl,
+    ].filter(Boolean) as string[];
+    avatars = imgs.length ? imgs : undefined;
     return (
       <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">
-        <Hero titleOverride={heroTitle} imageOverride={heroImage} />
+        <Hero
+          titleOverride={heroTitle}
+          imageOverride={heroImage}
+          avatars={avatars}
+        />
         <Benefits />
         <BestSellers />
         <SkinConcerns title="Shop by Skin Concerns" />
@@ -56,18 +99,7 @@ export default async function Home() {
         <Testimonials />
       </main>
     );
-  } catch (_) {
-    // Swallow fetch errors in dev; fall back to static title
+  } catch (e) {
+    throw e;
   }
-
-  return (
-    <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">
-      <Hero titleOverride={heroTitle} />
-      <Benefits />
-      <BestSellers />
-      <SkinConcerns title="Shop by Skin Concerns" />
-      <BrandVideo />
-      <Testimonials />
-    </main>
-  );
 }

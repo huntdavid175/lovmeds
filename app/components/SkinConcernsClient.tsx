@@ -41,7 +41,13 @@ export default function SkinConcernsClient({
         variants={list}
       >
         {items.map((c) => {
-          const slug = c.slug;
+          // const slug = c.slug;
+          const titleTransformed = c.title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .trim()
+            .replace(/\s+/g, "-");
+
           return (
             <motion.div
               key={c.title}
@@ -49,7 +55,7 @@ export default function SkinConcernsClient({
               variants={item}
             >
               <Link
-                href={`/collection/${slug}`}
+                href={`/collection/${titleTransformed}`}
                 className="block relative rounded-3xl overflow-hidden"
               >
                 <div className="relative h-[300px] md:h-[360px]">

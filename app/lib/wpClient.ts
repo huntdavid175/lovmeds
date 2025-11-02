@@ -7,15 +7,17 @@ const ENDPOINT = process.env.WORDPRESS_ENDPOINT as string;
 
 export async function gqlRequest<T>(
   query: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
+  options?: { revalidate?: number | false; cache?: RequestCache }
 ) {
   if (!ENDPOINT) throw new Error("WORDPRESS_ENDPOINT is not set");
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
-    // ISR-friendly caching; adjust as needed
-    next: { revalidate: 60 },
+    // Caching control: default ISR 60s, overridable per call
+    next: { revalidate: options?.revalidate ?? 60 },
+    cache: options?.cache,
   });
 
   if (!res.ok) throw new Error(`GraphQL HTTP error ${res.status}`);

@@ -5,9 +5,17 @@ import { motion } from "framer-motion";
 const HERO_IMAGE_URL =
   "https://framerusercontent.com/images/20QD5xeVLKBmv7ucQrtU5RfOUU.png?width=1024&height=1536";
 
-type HeroProps = { titleOverride?: string; imageOverride?: string };
+type HeroProps = {
+  titleOverride?: string;
+  imageOverride?: string;
+  avatars?: string[];
+};
 
-export default function Hero({ titleOverride, imageOverride }: HeroProps) {
+export default function Hero({
+  titleOverride,
+  imageOverride,
+  avatars,
+}: HeroProps) {
   console.log(imageOverride);
   const container = {
     hidden: { opacity: 0, y: 24 },
@@ -60,10 +68,29 @@ export default function Hero({ titleOverride, imageOverride }: HeroProps) {
           <div className="mt-8 flex items-center gap-4 justify-center md:justify-start">
             {/* Overlapping avatars */}
             <div className="flex -space-x-3">
-              <div className="h-10 w-10 rounded-full bg-[#0b0b0b] border-2 border-white"></div>
-              <div className="h-10 w-10 rounded-full bg-[#9f704d] border-2 border-white"></div>
-              <div className="h-10 w-10 rounded-full bg-[#caa189] border-2 border-white"></div>
-              <div className="h-10 w-10 rounded-full bg-[#6e3d2b] border-2 border-white"></div>
+              {(avatars && avatars.length ? avatars.slice(0, 4) : []).map(
+                (src, i) => (
+                  <div
+                    key={i}
+                    className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-white"
+                  >
+                    <Image
+                      src={src}
+                      alt="customer avatar"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )
+              )}
+              {!avatars?.length && (
+                <>
+                  <div className="h-10 w-10 rounded-full bg-[#0b0b0b] border-2 border-white"></div>
+                  <div className="h-10 w-10 rounded-full bg-[#9f704d] border-2 border-white"></div>
+                  <div className="h-10 w-10 rounded-full bg-[#caa189] border-2 border-white"></div>
+                  <div className="h-10 w-10 rounded-full bg-[#6e3d2b] border-2 border-white"></div>
+                </>
+              )}
             </div>
             <span className="text-sm text-black/80">200+ happy customers</span>
           </div>

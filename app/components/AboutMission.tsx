@@ -6,7 +6,13 @@ import { motion } from "framer-motion";
 const HERO_IMAGE_URL =
   "https://framerusercontent.com/images/Mvmwy2meoLookZmy5qqLLsuZ9A.png?width=840&height=1200";
 
-export default function AboutMission() {
+export default function AboutMission({
+  text,
+  imageUrl,
+}: {
+  text?: string;
+  imageUrl?: string;
+}) {
   const container = {
     hidden: { opacity: 0, y: 24 },
     visible: {
@@ -34,23 +40,31 @@ export default function AboutMission() {
           <h1 className="font-heading text-5xl md:text-7xl leading-tight tracking-tight text-black ls-title">
             Our Mission
           </h1>
-          <p className="mt-6 text-base md:text-lg text-black/60 max-w-3xl">
-            To create effective, nourishing products that address real skin
-            concerns by blending nature and science. We are committed to
-            crafting solutions that cater to people of color, empowering our
-            customers with the knowledge to make skincare simple and effective.
-            We strive for continuous improvement, ensuring sustainability in
-            everything we do to support both our customers and the planet.
-          </p>
+          {text ? (
+            <div
+              className="mt-6 text-base md:text-lg text-black/60 max-w-3xl"
+              dangerouslySetInnerHTML={{ __html: text }}
+            />
+          ) : (
+            <p className="mt-6 text-base md:text-lg text-black/60 max-w-3xl">
+              To create effective, nourishing products that address real skin
+              concerns by blending nature and science. We are committed to
+              crafting solutions that cater to people of color, empowering our
+              customers with the knowledge to make skincare simple and
+              effective. We strive for continuous improvement, ensuring
+              sustainability in everything we do to support both our customers
+              and the planet.
+            </p>
+          )}
         </motion.div>
 
         <motion.div
           className="bg-white rounded-3xl overflow-hidden"
           variants={item}
         >
-          <div className="relative w-full h-full min-h[420px] md:min-h-[520px]">
+          <div className="relative w-full h-full min-h-[420px] md:min-h-[520px]">
             <Image
-              src={HERO_IMAGE_URL}
+              src={imageUrl || HERO_IMAGE_URL}
               alt="Smiling person with healthy, glowing skin"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"

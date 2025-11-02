@@ -43,7 +43,9 @@ const page = async () => {
     const node = data?.pages?.edges?.[0]?.node;
     heroTitle = node?.title ?? undefined;
     heroImage = node?.featuredImage?.node?.sourceUrl ?? undefined;
-  } catch (_) {}
+  } catch (e) {
+    throw e;
+  }
 
   return (
     <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">

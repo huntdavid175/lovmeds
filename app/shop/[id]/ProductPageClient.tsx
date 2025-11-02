@@ -1,7 +1,6 @@
 "use client";
-
-import Benefits from "@/app/components/Benefits";
 import ProductCard from "@/app/components/ProductCard";
+import RecommendedProducts from "@/app/components/RecommendedProducts";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -67,10 +66,18 @@ const RECOMMENDED = [
   },
 ];
 
-export default function ProductPageClient({ id }: { id: string }) {
+export default function ProductPageClient({
+  id,
+  product: productProp,
+}: {
+  id: string;
+  product?: Product;
+}) {
   const product = useMemo(() => {
+    if (productProp && productProp.media && productProp.media.length > 0)
+      return productProp;
     return MOCK_PRODUCTS.find((p) => p.id === id) ?? MOCK_PRODUCTS[0];
-  }, [id]);
+  }, [id, productProp]);
 
   const [mainIndex, setMainIndex] = useState(0);
   const [qty, setQty] = useState(1);
@@ -90,7 +97,7 @@ export default function ProductPageClient({ id }: { id: string }) {
   };
 
   return (
-    <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">
+    <>
       <motion.section
         className="mt-4"
         initial="hidden"
@@ -174,7 +181,7 @@ export default function ProductPageClient({ id }: { id: string }) {
             className="bg-white rounded-3xl p-6 md:p-10"
             variants={item}
           >
-            <p className="text-black/50 text-sm mb-2">{product.category}</p>
+            <p className="text-black/50 text-base mb-2">{product.category}</p>
             <h1 className="font-heading text-4xl md:text-6xl text-black ls-title">
               {product.title}
             </h1>
@@ -231,39 +238,6 @@ export default function ProductPageClient({ id }: { id: string }) {
           </motion.div>
         </div>
       </motion.section>
-
-      <Benefits />
-
-      {/* Other products you might like */}
-      <motion.section
-        className="mt-24"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h3 className="font-heading text-4xl md:text-5xl text-black ls-title mb-8 md:mb-12">
-          Other Products You Might Like
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-3 items-stretch">
-          {RECOMMENDED.map((p) => {
-            const slug = p.title
-              .toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, "")
-              .trim()
-              .replace(/\s+/g, "-");
-            return (
-              <ProductCard
-                key={p.title}
-                title={p.title}
-                price={p.price}
-                imageUrl={p.imageUrl}
-                rating={p.rating}
-                href={`/shop/${slug}`}
-              />
-            );
-          })}
-        </div>
-      </motion.section>
-    </main>
+    </>
   );
 }
