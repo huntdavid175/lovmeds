@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import ProductCard from "./ProductCard";
 import { motion } from "framer-motion";
 
@@ -73,12 +74,12 @@ export default function BestSellersClient({
       </motion.div>
 
       <div className="mt-10 flex justify-center">
-        <a
-          href="#all-products"
+        <Link
+          href="/shop"
           className="inline-flex items-center justify-center rounded-full bg-[#6EA53A] text-white px-8 py-4 text-base font-medium transition-colors hover:bg-black"
         >
           See all product
-        </a>
+        </Link>
       </div>
     </motion.section>
   );

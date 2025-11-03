@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export type BenefitItem = { src: string; alt?: string | null; label: string };
 
@@ -48,12 +49,12 @@ export default function BenefitsClient({
             dangerouslySetInnerHTML={{ __html: description }}
           />
           <div className="mt-8 flex justify-start">
-            <a
-              href="#shop"
+            <Link
+              href="/shop"
               className="inline-flex items-center justify-center rounded-full bg-[#6EA53A] text-white px-8 py-4 text-base font-medium transition-colors hover:bg-black"
             >
               Shop Now
-            </a>
+            </Link>
           </div>
         </motion.div>
 

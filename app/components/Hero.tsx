@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 const HERO_IMAGE_URL =
   "https://framerusercontent.com/images/20QD5xeVLKBmv7ucQrtU5RfOUU.png?width=1024&height=1536";
@@ -57,12 +58,12 @@ export default function Hero({
           </motion.h1>
 
           <div className="mt-8 flex justify-center md:justify-start">
-            <a
-              href="#shop"
+            <Link
+              href="/shop"
               className="inline-flex items-center justify-center rounded-full bg-[#6EA53A] text-white px-8 py-4 text-base font-medium transition-colors hover:bg-black"
             >
               Shop Now
-            </a>
+            </Link>
           </div>
 
           <div className="mt-8 flex items-center gap-4 justify-center md:justify-start">
