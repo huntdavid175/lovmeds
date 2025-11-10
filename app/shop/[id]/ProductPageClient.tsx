@@ -110,8 +110,59 @@ export default function ProductPageClient({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
           {/* Left: Gallery (no card) */}
           <motion.div variants={item}>
-            <div className="grid grid-cols-[72px_1fr] gap-4 items-start">
-              {/* Thumbnails */}
+            {/* Mobile: thumbnails below main image */}
+            <div className="md:hidden flex flex-col gap-4 items-stretch">
+              <motion.div
+                key={mainIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35 }}
+                className="relative w-full h-[520px] rounded-3xl overflow-hidden"
+              >
+                {product.media[mainIndex]?.type === "image" ? (
+                  <Image
+                    src={product.media[mainIndex]?.src}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <></>
+                )}
+              </motion.div>
+              <div className="flex gap-4 overflow-x-auto pt-1">
+                {product.media.map((m, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setMainIndex(i)}
+                    className={`relative h-[84px] w-[84px] rounded-2xl overflow-hidden ${
+                      mainIndex === i
+                        ? "border-2 border-black"
+                        : "border border-black/10"
+                    }`}
+                    aria-label={`View image ${i + 1}`}
+                  >
+                    {m.type === "image" ? (
+                      <Image
+                        src={m.src}
+                        alt="thumbnail"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center">
+                          ▶
+                        </span>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: thumbnails on the left of the main image */}
+            <div className="hidden md:grid md:grid-cols-[72px_1fr] gap-4 items-start">
               <div className="flex flex-col gap-4">
                 {product.media.map((m, i) => (
                   <button
@@ -132,29 +183,21 @@ export default function ProductPageClient({
                         className="object-cover"
                       />
                     ) : (
-                      <>
-                        {/* <video
-                          src={m.src}
-                          className="h-full w-full object-cover"
-                          muted
-                        /> */}
-                        <span className="absolute inset-0 flex items-center justify-center">
-                          <span className="h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center">
-                            ▶
-                          </span>
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center">
+                          ▶
                         </span>
-                      </>
+                      </span>
                     )}
                   </button>
                 ))}
               </div>
-              {/* Main image */}
               <motion.div
                 key={mainIndex}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.35 }}
-                className="relative w-full h-[520px] md:h-[640px] rounded-3xl overflow-hidden"
+                className="relative w-full h-[640px] rounded-3xl overflow-hidden"
               >
                 {product.media[mainIndex]?.type === "image" ? (
                   <Image
@@ -166,15 +209,6 @@ export default function ProductPageClient({
                   />
                 ) : (
                   <></>
-                  // <video
-                  //   key={product.media[mainIndex]?.src}
-                  //   src={product.media[mainIndex]?.src}
-                  //   className="h-full w-full object-cover"
-                  //   controls
-                  //   autoPlay
-                  //   muted
-                  //   playsInline
-                  // />
                 )}
               </motion.div>
             </div>
