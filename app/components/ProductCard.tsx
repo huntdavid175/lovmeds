@@ -87,7 +87,7 @@ export default function ProductCard({
                 qty: 1,
               })
             }
-            className="absolute left-0 right-14 bottom-0 h-10 px-6 translate-y-14 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out rounded-full border border-black/10 text-black"
+            className="absolute left-0 right-14 bottom-0 h-10 px-6 translate-y-14 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out rounded-full border border-black/10 text-black hover:bg-black hover:text-white cursor-pointer"
           >
             Add to Cart
           </button>

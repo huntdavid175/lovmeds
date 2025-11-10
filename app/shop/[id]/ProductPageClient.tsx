@@ -3,6 +3,7 @@ import ProductCard from "@/app/components/ProductCard";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { motion } from "framer-motion";
 import { useCart } from "@/app/components/CartProvider";
 import { checkoutStoreFromForm } from "@/app/actions/woocommerce";
@@ -228,7 +229,7 @@ export default function ProductPageClient({
                     qty,
                   })
                 }
-                className="h-14 rounded-full bg-[#A33D4A] text-white text-lg"
+                className="h-14 rounded-full bg-[#A33D4A] hover:bg-[#8E3540] cursor-pointer text-white text-lg transition-colors"
               >
                 Add to Cart
               </button>
@@ -240,12 +241,7 @@ export default function ProductPageClient({
                     { id: String(product.numericId ?? product.id), qty },
                   ])}
                 />
-                <button
-                  type="submit"
-                  className="h-14 rounded-full bg-black text-white text-lg"
-                >
-                  Buy Now
-                </button>
+                <CheckoutSubmitButton />
               </form>
             </div>
 
@@ -254,5 +250,46 @@ export default function ProductPageClient({
         </div>
       </motion.section>
     </>
+  );
+}
+
+function CheckoutSubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      aria-busy={pending}
+      disabled={pending}
+      className={`h-14 rounded-full text-white text-lg transition-colors ${
+        pending
+          ? "bg-black/70 cursor-not-allowed"
+          : "bg-black hover:bg-[#111] cursor-pointer"
+      } flex items-center justify-center gap-2`}
+    >
+      {pending && (
+        <svg
+          className="animate-spin h-5 w-5 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          />
+        </svg>
+      )}
+      <span>{pending ? "Processing..." : "Buy Now"}</span>
+    </button>
   );
 }

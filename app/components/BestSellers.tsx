@@ -21,7 +21,7 @@ type ProductsQuery = {
 
 const QUERY = `
   query NewQuery {
-    products (where: {featured: true}, first: 4) {
+    products (where: {featured: true}, first: 5) {
       edges {
         node {
           featured
@@ -68,6 +68,6 @@ export default async function BestSellersServer() {
       return { title, price, imageUrl, rating: 5, productId, slug };
     });
   } catch (_) {}
-
+  console.log(items);
   return <BestSellersClient items={items} />;
 }

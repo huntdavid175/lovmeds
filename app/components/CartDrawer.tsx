@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartProvider";
 import { checkoutStoreFromForm } from "@/app/actions/woocommerce";
+import { useFormStatus } from "react-dom";
 
 export default function CartDrawer() {
   const { isOpen, close, items, updateQty, removeItem, subtotal } = useCart();
@@ -119,14 +120,53 @@ export default function CartDrawer() {
                     items.map((i) => ({ id: i.id, qty: i.qty }))
                   )}
                 />
-                <button className="w-full h-14 rounded-full bg-black text-white text-lg">
-                  Checkout
-                </button>
+                <DrawerCheckoutButton />
               </form>
             </div>
           </motion.aside>
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+function DrawerCheckoutButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      aria-busy={pending}
+      disabled={pending}
+      className={`w-full h-14 rounded-full text-white text-lg transition-colors ${
+        pending
+          ? "bg-black/70 cursor-not-allowed"
+          : "bg-black hover:bg-[#111] cursor-pointer"
+      } flex items-center justify-center gap-2`}
+    >
+      {pending && (
+        <svg
+          className="animate-spin h-5 w-5 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          />
+        </svg>
+      )}
+      <span>{pending ? "Processing..." : "Checkout"}</span>
+    </button>
   );
 }
