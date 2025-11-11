@@ -52,7 +52,9 @@ export default function Hero({
           >
             {titleOverride ? (
               <span dangerouslySetInnerHTML={{ __html: titleOverride }} />
-            ) : null}
+            ) : (
+              <span>INTIMACY, CONFIDENCE, AND CARE</span>
+            )}
           </motion.h1>
 
           <div className="mt-8 flex justify-center md:justify-start">

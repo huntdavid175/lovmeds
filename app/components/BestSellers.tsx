@@ -68,6 +68,6 @@ export default async function BestSellersServer() {
       return { title, price, imageUrl, rating: 5, productId, slug };
     });
   } catch (_) {}
-  console.log(items);
+
   return <BestSellersClient items={items} />;
 }
