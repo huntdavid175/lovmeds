@@ -30,7 +30,7 @@ export default function SkinConcernsClient({
       className="mt-24"
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: false, amount: 0.2 }}
+      viewport={{ once: true, amount: 0.2 }}
       variants={container}
     >
       <h3 className="font-heading text-4xl md:text-5xl text-black mb-8 md:mb-12 ls-title">
