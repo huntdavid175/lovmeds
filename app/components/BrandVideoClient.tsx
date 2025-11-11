@@ -23,7 +23,7 @@ export default function BrandVideoClient({
           muted
           loop
           playsInline
-          src={videoUrl || "https://www.pexels.com/download/video/6522548/"}
+          src={videoUrl || "https://www.pexels.com/download/video/5657517/"}
         />
         <div className="pointer-events-none absolute inset-0 bg-black/50" />
         <motion.div
@@ -37,7 +37,8 @@ export default function BrandVideoClient({
             role="heading"
             aria-level={3}
             dangerouslySetInnerHTML={{
-              __html: titleHtml || "The power behind<br /> every glow",
+              __html:
+                titleHtml || "Empowering your most <br/>personal moments.",
             }}
           />
         </motion.div>
