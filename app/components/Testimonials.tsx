@@ -11,23 +11,23 @@ type Testimonial = { quote: string; author: string };
 const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "I've struggled with dark spots for years, but after using LovMeds, my skin looks more even and radiant! The moisturizer keeps my skin hydrated all day without feeling greasy. Love it!",
-    author: "Aisha M.",
+      "I was honestly nervous about buying intimate products online, but LovMeds made it so easy. The packaging was completely discreet, and delivery was fast. I’ll definitely order again!",
+    author: "Anonymous Buyer",
   },
   {
     quote:
-      "This is the first skincare brand that truly understands melanin-rich skin. My complexion is glowing, and the shea butter moisturizer is a must-have. Highly recommend!",
-    author: "David O.",
+      "LovMeds really came through for me. I got my enhancers right on time, and let’s just say—my confidence went through the roof. No stress, no judgment, just results.",
+    author: "Anonymous Buyer",
   },
   {
     quote:
-      "My hyperpigmentation has visibly reduced, and my skin feels healthier. The Vitamin C serum is now a staple in my routine!",
-    author: "Kemi A.",
+      "My partner and I tried one of their couple’s kits, and it honestly brought a new spark to our nights. Everything felt classy and high quality — not awkward at all.",
+    author: "Anonymous Buyer",
   },
   {
     quote:
-      "Finally a brand that caters to my skin needs. The cleanser is gentle yet effective, and my skin barrier thanks me!",
-    author: "Samuel T.",
+      "I love that they have products made for women’s intimate care, not just men. I finally found a brand that gets it — discreet, gentle, and super effective.",
+    author: "Anonymous Buyer",
   },
 ];
 
@@ -65,7 +65,7 @@ export default function Testimonials() {
     >
       <div className="flex items-center justify-between mb-6 md:mb-10">
         <h3 className="font-heading text-4xl md:text-5xl text-black ls-title">
-          What Our Clients Say
+          What Our Customers Say
         </h3>
         <div className="hidden md:flex items-center gap-3">
           <button

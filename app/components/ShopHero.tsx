@@ -3,8 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-const HERO_IMAGE_URL =
-  "https://framerusercontent.com/images/Mvmwy2meoLookZmy5qqLLsuZ9A.png?width=840&height=1200";
+const HERO_IMAGE_URL = "/assets/images/store_products.png";
 
 type ShopHeroProps = {
   title?: string;

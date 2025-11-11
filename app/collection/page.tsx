@@ -50,7 +50,7 @@ const page = async () => {
   return (
     <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">
       <ShopHero
-        title={heroTitle || "Shop by Skin Concerns"}
+        title={heroTitle || "Shop By Your Needs"}
         imageUrl={heroImage}
       />
       <SkinConcerns />
