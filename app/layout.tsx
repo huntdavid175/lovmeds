@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     default: "LovMeds",
     template: "%s | LovMeds",
   },
-  description: "Natural skincare — gentle, effective, and science-backed.",
+  description: "Your private life, privately delivered.",
 };
 
 export default function RootLayout({
