@@ -15,13 +15,13 @@ type CategoriesQuery = {
 
 const QUERY = `
   query NewQuery {
-    productCategories {
+    productCategories{
       nodes {
         image { sourceUrl }
-        name
-        slug
+          name
+          slug
+        }
       }
-    }
   }
 `;
 

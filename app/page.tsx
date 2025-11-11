@@ -94,9 +94,9 @@ export default async function Home() {
         />
         {/* <Benefits /> */}
         <BestSellers />
-        <SkinConcerns title="Shop by Skin Concerns" />
+        <SkinConcerns title="Shop by your Needs" />
         <BrandVideo />
-        <Testimonials />
+        {/* <Testimonials /> */}
       </main>
     );
   } catch (e) {
