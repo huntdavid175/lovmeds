@@ -116,8 +116,10 @@ export default async function ProductPage({
     imageUrl: string;
     rating: number;
   }[] = [];
+  // GraphQL fetch commented out
   try {
-    const data = await gqlRequest<ProductBySlugQuery>(PRODUCT_QUERY, { slug });
+    // const data = await gqlRequest<ProductBySlugQuery>(PRODUCT_QUERY, { slug });
+    const data = null as any;
     const p = data?.product;
     if (p) {
       const images: string[] = [];
@@ -169,10 +171,11 @@ export default async function ProductPage({
         slug?: string;
       }[] = [];
       for (const c of catSlugs) {
-        const rec = await gqlRequest<ProductsByCategoryQuery>(
-          PRODUCTS_BY_CATEGORY_QUERY,
-          { category: c }
-        );
+        // const rec = await gqlRequest<ProductsByCategoryQuery>(
+        //   PRODUCTS_BY_CATEGORY_QUERY,
+        //   { category: c }
+        // );
+        const rec = null as any;
         const edges = rec?.products?.edges || [];
         for (const edge of edges) {
           const n = edge?.node;

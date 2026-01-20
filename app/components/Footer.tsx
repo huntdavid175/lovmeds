@@ -113,14 +113,14 @@ export default function Footer() {
                     Collection
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link
                     href="/about"
                     className="transition-colors hover:text-[#A33D4A]"
                   >
                     About
                   </Link>
-                </li>
+                </li> */}
               </ul>
             </div>
             <div>

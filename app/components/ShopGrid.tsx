@@ -70,61 +70,62 @@ export default async function ShopGrid() {
   const filterMap = new Map<string, string>(); // key -> label
   filterMap.set("all", "All");
 
-  try {
-    const data = await gqlRequest<CategoriesWithProductsQuery>(QUERY);
-    const cats = data?.productCategories?.nodes || [];
-    for (const cat of cats) {
-      const categoryName = (cat?.name || "").trim();
-      const categoryKey = categoryName ? slugify(categoryName) : "";
-      // Do not seed products with the parent category; only use product's own categories
-      const edges = cat?.products?.edges || [];
-      for (const e of edges) {
-        const n: any = e?.node || {};
-        const id: string = n?.id || String(n?.productId || "");
-        if (!id) continue;
-        const title: string = n?.name || "Product";
-        const imageUrl: string = n?.featuredImage?.node?.sourceUrl || "";
-        const priceRaw: unknown = n?.price ?? n?.regularPrice ?? "$0.00";
-        const price: string =
-          typeof priceRaw === "string" ? priceRaw : `$${priceRaw}`;
-        const categoriesRaw: string[] = (n?.productCategories?.nodes || [])
-          .map((x: any) => (x?.name || "").trim())
-          .filter(Boolean);
-        const categoryKeys: string[] = Array.from(
-          new Set(categoriesRaw.map((nm: string) => slugify(nm)))
-        );
-        // Build filters from actual product categories
-        for (const nm of categoriesRaw) {
-          const k = slugify(nm);
-          if (k) filterMap.set(k, nm);
-        }
-        const existing = byId.get(id);
-        if (existing) {
-          const merged = Array.from(
-            new Set([...existing.categoryKeys, ...categoryKeys])
-          );
-          byId.set(id, { ...existing, categoryKeys: merged });
-        } else {
-          byId.set(id, {
-            title,
-            price,
-            imageUrl,
-            rating: 5,
-            categoryKeys,
-            productId:
-              typeof n?.databaseId === "number"
-                ? n.databaseId
-                : typeof n?.productId === "number"
-                ? n.productId
-                : undefined,
-            slug: typeof n?.slug === "string" ? n.slug : undefined,
-          });
-        }
-      }
-    }
-  } catch (e) {
-    throw e;
-  }
+  // GraphQL fetch commented out
+  // try {
+  //   const data = await gqlRequest<CategoriesWithProductsQuery>(QUERY);
+  //   const cats = data?.productCategories?.nodes || [];
+  //   for (const cat of cats) {
+  //     const categoryName = (cat?.name || "").trim();
+  //     const categoryKey = categoryName ? slugify(categoryName) : "";
+  //     // Do not seed products with the parent category; only use product's own categories
+  //     const edges = cat?.products?.edges || [];
+  //     for (const e of edges) {
+  //       const n: any = e?.node || {};
+  //       const id: string = n?.id || String(n?.productId || "");
+  //       if (!id) continue;
+  //       const title: string = n?.name || "Product";
+  //       const imageUrl: string = n?.featuredImage?.node?.sourceUrl || "";
+  //       const priceRaw: unknown = n?.price ?? n?.regularPrice ?? "$0.00";
+  //       const price: string =
+  //         typeof priceRaw === "string" ? priceRaw : `$${priceRaw}`;
+  //       const categoriesRaw: string[] = (n?.productCategories?.nodes || [])
+  //         .map((x: any) => (x?.name || "").trim())
+  //         .filter(Boolean);
+  //       const categoryKeys: string[] = Array.from(
+  //         new Set(categoriesRaw.map((nm: string) => slugify(nm)))
+  //       );
+  //       // Build filters from actual product categories
+  //       for (const nm of categoriesRaw) {
+  //         const k = slugify(nm);
+  //         if (k) filterMap.set(k, nm);
+  //       }
+  //       const existing = byId.get(id);
+  //       if (existing) {
+  //         const merged = Array.from(
+  //           new Set([...existing.categoryKeys, ...categoryKeys])
+  //         );
+  //         byId.set(id, { ...existing, categoryKeys: merged });
+  //       } else {
+  //         byId.set(id, {
+  //           title,
+  //           price,
+  //           imageUrl,
+  //           rating: 5,
+  //           categoryKeys,
+  //           productId:
+  //             typeof n?.databaseId === "number"
+  //               ? n.databaseId
+  //               : typeof n?.productId === "number"
+  //               ? n.productId
+  //               : undefined,
+  //           slug: typeof n?.slug === "string" ? n.slug : undefined,
+  //         });
+  //       }
+  //     }
+  //   }
+  // } catch (e) {
+  //   throw e;
+  // }
 
   const products = Array.from(byId.values());
   const filters = Array.from(filterMap, ([key, label]) => ({ key, label }));

@@ -84,14 +84,16 @@ export default async function CollectionGrid({
     if (!category) {
       return <CollectionGridClient items={[]} />;
     }
-    const data = await gqlRequest<ProductsByCategoryQuery>(QUERY, { category });
-    let edges = data?.products?.edges || [];
-    if (edges.length === 0) {
-      const alt = await gqlRequest<any>(CATEGORY_FALLBACK_QUERY, {
-        slug: [slugOriginal],
-      });
-      edges = alt?.productCategories?.nodes?.[0]?.products?.edges || [];
-    }
+    // GraphQL fetch commented out
+    // const data = await gqlRequest<ProductsByCategoryQuery>(QUERY, { category });
+    const data = null as any;
+    let edges: any[] = [];
+    // if (edges.length === 0) {
+    //   const alt = await gqlRequest<any>(CATEGORY_FALLBACK_QUERY, {
+    //     slug: [slugOriginal],
+    //   });
+    //   edges = alt?.productCategories?.nodes?.[0]?.products?.edges || [];
+    // }
     items = edges.map((e: { node?: any }) => {
       const n: any = e?.node ? e.node : {};
       const title: string = n?.name || "Product";

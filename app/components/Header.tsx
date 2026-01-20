@@ -41,9 +41,9 @@ export default function Header() {
           >
             Collection
           </Link>
-          <Link href="/about" className="hover:opacity-80 transition-opacity">
+          {/* <Link href="/about" className="hover:opacity-80 transition-opacity">
             About
-          </Link>
+          </Link> */}
         </nav>
 
         {/* Right icons */}

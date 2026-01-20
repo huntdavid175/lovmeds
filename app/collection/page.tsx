@@ -4,7 +4,7 @@ import BrandVideo from "../components/BrandVideo";
 import Testimonials from "../components/Testimonials";
 // import CollectionHero from "../components/CollectionHero";
 import ShopHero from "../components/ShopHero";
-import { gqlRequest } from "../lib/wpClient";
+// import { gqlRequest } from "../lib/wpClient";
 import SkinConcerns from "../components/SkinConcerns";
 
 export const metadata: Metadata = {
@@ -38,14 +38,15 @@ const COLLECTIONS_HERO_QUERY = `
 const page = async () => {
   let heroTitle: string | undefined;
   let heroImage: string | undefined;
-  try {
-    const data = await gqlRequest<CollectionHeroQuery>(COLLECTIONS_HERO_QUERY);
-    const node = data?.pages?.edges?.[0]?.node;
-    heroTitle = node?.title ?? undefined;
-    heroImage = node?.featuredImage?.node?.sourceUrl ?? undefined;
-  } catch (e) {
-    throw e;
-  }
+  // GraphQL fetch commented out
+  // try {
+  //   const data = await gqlRequest<CollectionHeroQuery>(COLLECTIONS_HERO_QUERY);
+  //   const node = data?.pages?.edges?.[0]?.node;
+  //   heroTitle = node?.title ?? undefined;
+  //   heroImage = node?.featuredImage?.node?.sourceUrl ?? undefined;
+  // } catch (e) {
+  //   throw e;
+  // }
 
   return (
     <main className="max-w-[1498px]  mx-auto md:px-6 px-4 pb-16">

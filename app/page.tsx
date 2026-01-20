@@ -5,7 +5,7 @@ import BestSellers from "./components/BestSellers";
 import SkinConcerns from "./components/SkinConcerns";
 import BrandVideo from "./components/BrandVideo";
 import Testimonials from "./components/Testimonials";
-import { gqlRequest } from "./lib/wpClient";
+// import { gqlRequest } from "./lib/wpClient";
 
 export const metadata: Metadata = {
   title: "Home | LovMeds",
