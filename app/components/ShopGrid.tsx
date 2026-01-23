@@ -1,133 +1,88 @@
 import ShopGridClient, { ClientProduct } from "./ShopGridClient";
-import { gqlRequest } from "../lib/wpClient";
+import { supabase } from "../lib/database";
 
-type CategoriesWithProductsQuery = {
-  productCategories?: {
-    nodes?: Array<{
-      name?: string | null;
-      products?: {
-        edges?: Array<{
-          node: {
-            name?: string | null;
-            productCategories?: {
-              nodes?: Array<{ name?: string | null }> | null;
-            } | null;
-            productId?: number | null;
-            __typename?: string;
-            id?: string | null;
-            featuredImage?: {
-              node?: { sourceUrl?: string | null } | null;
-            } | null;
-            regularPrice?: string | null;
-            price?: string | null;
-          };
-        }> | null;
-      } | null;
-    }> | null;
-  } | null;
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-GH", {
+    style: "currency",
+    currency: "GHS",
+  }).format(amount);
 };
 
-const QUERY = `
-  query NewQuery {
-    productCategories(first: 100) {
-      nodes {
-        name
-        products(first: 100) {
-          edges {
-            node {
-              name
-              slug
-              databaseId
-              productCategories { nodes { name } }
-              productId
-              ... on SimpleProduct {
-                id
-                name
-                featuredImage { node { sourceUrl } }
-                regularPrice
-                price
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-/]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
 
 export default async function ShopGrid() {
-  const byId = new Map<string, ClientProduct>();
-
-  const slugify = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s-/]/g, "")
-      .trim()
-      .replace(/\s+/g, "-");
-
   const filterMap = new Map<string, string>(); // key -> label
   filterMap.set("all", "All");
 
-  // GraphQL fetch commented out
-  // try {
-  //   const data = await gqlRequest<CategoriesWithProductsQuery>(QUERY);
-  //   const cats = data?.productCategories?.nodes || [];
-  //   for (const cat of cats) {
-  //     const categoryName = (cat?.name || "").trim();
-  //     const categoryKey = categoryName ? slugify(categoryName) : "";
-  //     // Do not seed products with the parent category; only use product's own categories
-  //     const edges = cat?.products?.edges || [];
-  //     for (const e of edges) {
-  //       const n: any = e?.node || {};
-  //       const id: string = n?.id || String(n?.productId || "");
-  //       if (!id) continue;
-  //       const title: string = n?.name || "Product";
-  //       const imageUrl: string = n?.featuredImage?.node?.sourceUrl || "";
-  //       const priceRaw: unknown = n?.price ?? n?.regularPrice ?? "$0.00";
-  //       const price: string =
-  //         typeof priceRaw === "string" ? priceRaw : `$${priceRaw}`;
-  //       const categoriesRaw: string[] = (n?.productCategories?.nodes || [])
-  //         .map((x: any) => (x?.name || "").trim())
-  //         .filter(Boolean);
-  //       const categoryKeys: string[] = Array.from(
-  //         new Set(categoriesRaw.map((nm: string) => slugify(nm)))
-  //       );
-  //       // Build filters from actual product categories
-  //       for (const nm of categoriesRaw) {
-  //         const k = slugify(nm);
-  //         if (k) filterMap.set(k, nm);
-  //       }
-  //       const existing = byId.get(id);
-  //       if (existing) {
-  //         const merged = Array.from(
-  //           new Set([...existing.categoryKeys, ...categoryKeys])
-  //         );
-  //         byId.set(id, { ...existing, categoryKeys: merged });
-  //       } else {
-  //         byId.set(id, {
-  //           title,
-  //           price,
-  //           imageUrl,
-  //           rating: 5,
-  //           categoryKeys,
-  //           productId:
-  //             typeof n?.databaseId === "number"
-  //               ? n.databaseId
-  //               : typeof n?.productId === "number"
-  //               ? n.productId
-  //               : undefined,
-  //           slug: typeof n?.slug === "string" ? n.slug : undefined,
-  //         });
-  //       }
-  //     }
-  //   }
-  // } catch (e) {
-  //   throw e;
-  // }
+  let products: ClientProduct[] = [];
 
-  const products = Array.from(byId.values());
+  try {
+    // Fetch products with their categories
+    const { data: productsData, error: productsError } = await supabase
+      .from("products")
+      .select(`
+        *,
+        product_category_relations (
+          category_id,
+          product_categories (id, name, slug)
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (productsError) throw productsError;
+
+    // Fetch all active categories for filters
+    const { data: categoriesData } = await supabase
+      .from("product_categories")
+      .select("id, name, slug")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    // Build filter map from categories
+    if (categoriesData) {
+      categoriesData.forEach((cat) => {
+        const key = slugify(cat.name);
+        filterMap.set(key, cat.name);
+      });
+    }
+
+    // Transform products with category keys
+    products = (productsData || []).map((product: any) => {
+      const sellingPrice = product.sale_price ?? product.normal_price;
+      const categoryKeys: string[] = [];
+      
+      if (product.product_category_relations) {
+        product.product_category_relations.forEach((rel: any) => {
+          if (rel.product_categories) {
+            const catSlug = slugify(rel.product_categories.name);
+            if (catSlug && !categoryKeys.includes(catSlug)) {
+              categoryKeys.push(catSlug);
+            }
+          }
+        });
+      }
+
+      return {
+        title: product.title,
+        price: formatCurrency(parseFloat(sellingPrice.toString())),
+        imageUrl: product.image_url || "",
+        rating: 5,
+        categoryKeys,
+        slug: product.slug || undefined,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+  }
+
   const filters = Array.from(filterMap, ([key, label]) => ({ key, label }));
 
   return <ShopGridClient products={products} filters={filters} />;

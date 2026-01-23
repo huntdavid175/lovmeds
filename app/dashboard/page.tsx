@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { supabase } from "@/app/lib/database";
 
 type Order = {
   id: string;
@@ -11,7 +12,7 @@ type Order = {
   customerEmail: string;
   status: "pending" | "processing" | "completed" | "cancelled";
   total: number;
-  items: Array<{ id: string; productName: string; quantity: number; price: number }>;
+  paid: boolean;
   createdAt: string;
 };
 
@@ -24,74 +25,89 @@ type Product = {
   stock: number;
 };
 
-// Mock data - in real app, this would come from API
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-001",
-    customerName: "John Doe",
-    customerEmail: "john@example.com",
-    status: "pending",
-    total: 89.97,
-    items: [
-      { id: "1", productName: "Product A", quantity: 2, price: 29.99 },
-      { id: "2", productName: "Product B", quantity: 1, price: 29.99 },
-    ],
-    createdAt: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-002",
-    customerName: "Jane Smith",
-    customerEmail: "jane@example.com",
-    status: "processing",
-    total: 149.95,
-    items: [
-      { id: "3", productName: "Product C", quantity: 3, price: 49.98 },
-    ],
-    createdAt: "2024-01-14T14:20:00Z",
-  },
-  {
-    id: "3",
-    orderNumber: "ORD-003",
-    customerName: "Bob Johnson",
-    customerEmail: "bob@example.com",
-    status: "completed",
-    total: 59.98,
-    items: [
-      { id: "4", productName: "Product D", quantity: 2, price: 29.99 },
-    ],
-    createdAt: "2024-01-13T09:15:00Z",
-  },
-  {
-    id: "4",
-    orderNumber: "ORD-004",
-    customerName: "Alice Williams",
-    customerEmail: "alice@example.com",
-    status: "completed",
-    total: 199.96,
-    items: [
-      { id: "5", productName: "Product E", quantity: 4, price: 49.99 },
-    ],
-    createdAt: "2024-01-12T16:45:00Z",
-  },
-];
-
-const MOCK_PRODUCTS: Product[] = [
-  { id: "1", title: "Sample Product", normalPrice: 29.99, salePrice: 24.99, costPrice: 15.00, stock: 50 },
-];
-
 export default function DashboardOverview() {
-  const [orders] = useState<Order[]>(MOCK_ORDERS);
-  const [products] = useState<Product[]>(MOCK_PRODUCTS);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    void fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+
+      // Fetch orders
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (ordersError) throw ordersError;
+
+      const transformedOrders: Order[] = (ordersData || []).map((order: any) => ({
+        id: order.id,
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        customerEmail: order.customer_email,
+        status: order.status as Order["status"],
+        total: parseFloat(order.total?.toString() ?? "0"),
+        paid: order.paid || false,
+        createdAt: order.created_at,
+      }));
+
+      setOrders(transformedOrders);
+
+      // Fetch products
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("*");
+
+      if (productsError) throw productsError;
+
+      const transformedProducts: Product[] = (productsData || []).map(
+        (p: any) => ({
+          id: p.id,
+          title: p.title,
+          normalPrice: parseFloat(p.normal_price?.toString() ?? "0"),
+          salePrice: p.sale_price
+            ? parseFloat(p.sale_price.toString())
+            : undefined,
+          costPrice: parseFloat(p.cost_price?.toString() ?? "0"),
+          stock: p.stock ?? 0,
+        })
+      );
+
+      setProducts(transformedProducts);
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Calculate metrics
   const metrics = useMemo(() => {
-    const totalRevenue = orders
-      .filter((o) => o.status === "completed")
-      .reduce((sum, order) => sum + order.total, 0);
+    if (orders.length === 0 && products.length === 0) {
+      return {
+        totalRevenue: 0,
+        totalSales: 0,
+        pendingOrders: 0,
+        totalProducts: 0,
+        averageOrderValue: 0,
+        last30DaysRevenue: 0,
+        stockValue: 0,
+      };
+    }
 
-    const totalSales = orders.filter((o) => o.status === "completed").length;
+    const completedOrders = orders.filter((o) => o.status === "completed");
+    const totalRevenue = completedOrders.reduce(
+      (sum, order) => sum + order.total,
+      0
+    );
+
+    const totalSales = completedOrders.length;
 
     const pendingOrders = orders.filter((o) => o.status === "pending").length;
 
@@ -100,8 +116,14 @@ export default function DashboardOverview() {
     const averageOrderValue =
       totalSales > 0 ? totalRevenue / totalSales : 0;
 
-    // Calculate revenue for last 30 days (mock - using all completed orders)
-    const last30DaysRevenue = totalRevenue;
+    // Calculate revenue for last 30 days
+    const now = new Date();
+    const thirtyDaysAgo = new Date(
+      now.getTime() - 30 * 24 * 60 * 60 * 1000
+    );
+    const last30DaysRevenue = completedOrders
+      .filter((o) => new Date(o.createdAt) >= thirtyDaysAgo)
+      .reduce((sum, order) => sum + order.total, 0);
 
     // Calculate stock value (cost price of all stock)
     const stockValue = products.reduce(
@@ -139,12 +161,31 @@ export default function DashboardOverview() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-heading text-4xl md:text-5xl text-black mb-2 ls-title">
-          Dashboard Overview
-        </h1>
-        <p className="text-black/60">Key metrics and recent activity</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl md:text-4xl text-black mb-1 ls-title">
+            Dashboard Overview
+          </h1>
+          <p className="text-black/60 text-sm md:text-base">
+            Key metrics and recent activity
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 md:justify-end">
+          <button
+            onClick={fetchData}
+            className="h-10 px-4 rounded-xl bg-white border border-black/10 text-black text-sm font-medium hover:bg-black/5 transition-colors cursor-pointer"
+          >
+            🔄 Refresh
+          </button>
+        </div>
       </div>
+
+      {isLoading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A33D4A] mx-auto mb-4"></div>
+          <p className="text-black/60">Loading dashboard data...</p>
+        </div>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -164,7 +205,7 @@ export default function DashboardOverview() {
           <p className="font-heading text-2xl text-black">
             {formatCurrency(metrics.totalRevenue)}
           </p>
-          <p className="text-xs text-black/40 mt-2">All time</p>
+          <p className="text-xs text-black/40 mt-2">Completed orders</p>
         </motion.div>
 
         <motion.div

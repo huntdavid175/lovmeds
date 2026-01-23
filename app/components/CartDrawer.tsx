@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartProvider";
-import { checkoutStoreFromForm } from "@/app/actions/woocommerce";
-import { useFormStatus } from "react-dom";
 
 export default function CartDrawer() {
   const { isOpen, close, items, updateQty, removeItem, subtotal } = useCart();
@@ -64,7 +63,10 @@ export default function CartDrawer() {
                           {it.title}
                         </p>
                         <p className="text-black text-lg">
-                          ${(it.price * it.qty).toFixed(2)}
+                          {new Intl.NumberFormat("en-GH", {
+                            style: "currency",
+                            currency: "GHS",
+                          }).format(it.price * it.qty)}
                         </p>
                       </div>
                       <div className="mt-4 flex items-center gap-4">
@@ -103,25 +105,19 @@ export default function CartDrawer() {
               <div className="flex items-center justify-between text-lg">
                 <span className="font-semibold tracking-[-1px]">Subtotal</span>
                 <span className="font-semibold tracking-[-1px]">
-                  ${subtotal.toFixed(2)}
+                  {new Intl.NumberFormat("en-GH", {
+                    style: "currency",
+                    currency: "GHS",
+                  }).format(subtotal)}
                 </span>
               </div>
-              <form
-                action={checkoutStoreFromForm}
-                className="mt-4"
-                onSubmit={(e) => {
-                  if (totalQty === 0) e.preventDefault();
-                }}
+              <Link
+                href="/checkout"
+                onClick={close}
+                className="mt-4 block w-full h-14 rounded-full bg-black hover:bg-[#111] text-white text-lg font-medium transition-colors flex items-center justify-center cursor-pointer"
               >
-                <input
-                  type="hidden"
-                  name="items"
-                  value={JSON.stringify(
-                    items.map((i) => ({ id: i.id, qty: i.qty }))
-                  )}
-                />
-                <DrawerCheckoutButton />
-              </form>
+                Checkout
+              </Link>
             </div>
           </motion.aside>
         </>
@@ -130,43 +126,3 @@ export default function CartDrawer() {
   );
 }
 
-function DrawerCheckoutButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      aria-busy={pending}
-      disabled={pending}
-      className={`w-full h-14 rounded-full text-white text-lg transition-colors ${
-        pending
-          ? "bg-black/70 cursor-not-allowed"
-          : "bg-black hover:bg-[#111] cursor-pointer"
-      } flex items-center justify-center gap-2`}
-    >
-      {pending && (
-        <svg
-          className="animate-spin h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          aria-hidden
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          />
-        </svg>
-      )}
-      <span>{pending ? "Processing..." : "Checkout"}</span>
-    </button>
-  );
-}

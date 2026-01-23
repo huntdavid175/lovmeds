@@ -41,13 +41,13 @@ export default function BestSellersClient({
 
   return (
     <motion.section
-      className="mt-24"
+      className="mt-24 px-4 md:px-0"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
       variants={container}
     >
-      <h3 className="font-heading text-4xl md:text-5xl text-black mb-8 md:mb-12 ls-title">
+      <h3 className="font-heading text-3xl sm:text-4xl md:text-5xl text-black mb-6 md:mb-12 ls-title">
         Explore Our Best Sellers
       </h3>
 

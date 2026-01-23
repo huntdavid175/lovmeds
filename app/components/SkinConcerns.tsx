@@ -1,50 +1,32 @@
 import SkinConcernsClient, { SkinConcernItem } from "./SkinConcernsClient";
-import { gqlRequest } from "../lib/wpClient";
+import { supabase } from "../lib/database";
 
 type SkinConcernsProps = { title?: string };
 
-type CategoriesQuery = {
-  productCategories?: {
-    nodes?: Array<{
-      name?: string | null;
-      slug?: string | null;
-      image?: { sourceUrl?: string | null } | null;
-    }> | null;
-  } | null;
-};
-
-const QUERY = `
-  query NewQuery {
-    productCategories{
-      nodes {
-        image { sourceUrl }
-          name
-          slug
-        }
-      }
-  }
-`;
-
 export default async function SkinConcerns({ title }: SkinConcernsProps) {
   let items: SkinConcernItem[] = [];
-  // GraphQL fetch commented out
-  // try {
-  //   const data = await gqlRequest<CategoriesQuery>(QUERY);
-  //   const nodes = data?.productCategories?.nodes || [];
-  //   items = nodes
-  //     .filter((n) => (n?.name || "").trim())
-  //     .map((n) => ({
-  //       title: n?.name || "",
-  //       imageUrl: n?.image?.sourceUrl || "",
-  //       slug: (n?.slug || n?.name || "")
-  //         .toString()
-  //         .trim()
-  //         .toLowerCase()
-  //         .replace(/\s+/g, "-")
-  //         .replace(/[^a-z0-9-]/g, ""),
-  //     }))
-  //     .filter((i) => i.title && i.imageUrl && i.slug);
-  // } catch (_) {}
+
+  try {
+    const { data, error } = await supabase
+      .from("product_categories")
+      .select("id, name, slug, image_url")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (error) throw error;
+
+    items = (data || [])
+      .filter((cat) => cat.name && cat.slug)
+      .map((cat) => ({
+        title: cat.name,
+        imageUrl: cat.image_url || "",
+        slug: cat.slug,
+      }))
+      .filter((i) => i.title && i.slug);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+  }
 
   return <SkinConcernsClient title={title} items={items} />;
 }

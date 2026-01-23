@@ -24,7 +24,8 @@ export default function ShopGridClient({
   filters: FilterOption[]; // includes { key: 'all', label: 'All' }
 }) {
   const [filterKey, setFilterKey] = useState<string>(filters[0]?.key || "all");
-  const [visible, setVisible] = useState(4);
+  // Show at least 3 rows: 12 items (3 rows × 4 cols on xl screens)
+  const [visible, setVisible] = useState(12);
 
   const items = useMemo(() => {
     if (filterKey === "all") return products;
@@ -35,7 +36,7 @@ export default function ShopGridClient({
   }, [filterKey, products]);
 
   useEffect(() => {
-    setVisible(4);
+    setVisible(12); // Reset to 12 items (3 rows) when filter changes
   }, [filterKey]);
 
   return (
@@ -109,11 +110,11 @@ export default function ShopGridClient({
         })}
       </motion.div>
 
-      {visible < items.length && (
+      {visible < items.length && items.length > 0 && (
         <div className="mt-10 flex justify-center">
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => setVisible((v) => Math.min(v + 4, items.length))}
+            onClick={() => setVisible((v) => Math.min(v + 12, items.length))}
             className="inline-flex items-center justify-center rounded-full bg-[#A33D4A] text-white px-8 py-4 text-base font-medium transition-colors hover:bg-black"
           >
             Load More

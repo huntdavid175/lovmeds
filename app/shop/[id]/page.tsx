@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ProductPageClient from "./ProductPageClient";
 import Benefits from "@/app/components/Benefits";
-import { gqlRequest } from "@/app/lib/wpClient";
+import { supabase } from "@/app/lib/database";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
 
 export const revalidate = 3600; // ISR window (1 hour)
@@ -22,85 +22,12 @@ export async function generateMetadata({
   return { title: `${pretty} | LovMeds` };
 }
 
-type ProductBySlugQuery = {
-  product?: {
-    id?: string | null;
-    slug?: string | null;
-    featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
-    galleryImages?: {
-      nodes?: Array<{ sourceUrl?: string | null } | null>;
-    } | null;
-    __typename?: string;
-    name?: string | null;
-    price?: string | null;
-    regularPrice?: string | null;
-    description?: string | null;
-    productCategories?: {
-      edges?: Array<{
-        node?: {
-          id?: string | null;
-          name?: string | null;
-          slug?: string | null;
-        } | null;
-      }> | null;
-    } | null;
-  } | null;
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-GH", {
+    style: "currency",
+    currency: "GHS",
+  }).format(amount);
 };
-
-const PRODUCT_QUERY = `
-  query NewQuery($slug: ID!) {
-    product(id: $slug, idType: SLUG) {
-      id
-      databaseId
-      featuredImage { node { sourceUrl } }
-      galleryImages { nodes { sourceUrl } }
-      slug
-      ... on SimpleProduct {
-        id
-        name
-        price
-        regularPrice
-        description
-      }
-      productCategories { edges { node { id name slug } } }
-    }
-  }
-`;
-
-type ProductsByCategoryQuery = {
-  products?: {
-    edges?: Array<{
-      node?: {
-        __typename?: string;
-        id?: string | null;
-        slug?: string | null;
-        name?: string | null;
-        price?: string | null;
-        regularPrice?: string | null;
-        featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
-      } | null;
-    }> | null;
-  } | null;
-};
-
-const PRODUCTS_BY_CATEGORY_QUERY = `
-  query ProductsByCat($category: String!) {
-    products(where: { category: $category }) {
-      edges {
-        node {
-          ... on SimpleProduct {
-            id
-            slug
-            name
-            price
-            regularPrice
-            featuredImage { node { sourceUrl } }
-          }
-        }
-      }
-    }
-  }
-`;
 
 export default async function ProductPage({
   params,
@@ -115,91 +42,98 @@ export default async function ProductPage({
     price: string;
     imageUrl: string;
     rating: number;
+    slug?: string;
   }[] = [];
-  // GraphQL fetch commented out
-  try {
-    // const data = await gqlRequest<ProductBySlugQuery>(PRODUCT_QUERY, { slug });
-    const data = null as any;
-    const p = data?.product;
-    if (p) {
-      const images: string[] = [];
-      const fi = p.featuredImage?.node?.sourceUrl || "";
-      if (fi) images.push(fi);
-      const gallery = p.galleryImages?.nodes || [];
-      for (const n of gallery) {
-        const u = n?.sourceUrl || "";
-        if (u) images.push(u);
-      }
-      productData = {
-        id: p.slug || slug,
-        numericId:
-          typeof (p as any)?.databaseId === "number"
-            ? (p as any).databaseId
-            : undefined,
-        title: p.name || p.slug || slug,
-        price:
-          parseFloat(
-            (p.price || p.regularPrice || "0")
-              .toString()
-              .replace(/[^0-9.]/g, "")
-          ) || 0,
-        category: (p.productCategories?.edges || [])
-          .map((e) => (e?.node?.name || "").trim())
-          .filter(Boolean)
-          .map((n) =>
-            n
-              .split(" ")
-              .filter(Boolean)
-              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(" ")
-          )
-          .join(", "),
-        description: (p.description || "").replace(/<[^>]+>/g, ""),
-        media: images.map((src) => ({ type: "image" as const, src })),
-      };
 
-      // Build recommended from same categories (max 5, dedup, exclude current)
-      const catSlugs = (p.productCategories?.edges || [])
-        .map((e) => e?.node?.slug || "")
-        .filter(Boolean);
-      const seen = new Set<string>();
-      const out: {
-        title: string;
-        price: string;
-        imageUrl: string;
-        rating: number;
-        slug?: string;
-      }[] = [];
-      for (const c of catSlugs) {
-        // const rec = await gqlRequest<ProductsByCategoryQuery>(
-        //   PRODUCTS_BY_CATEGORY_QUERY,
-        //   { category: c }
-        // );
-        const rec = null as any;
-        const edges = rec?.products?.edges || [];
-        for (const edge of edges) {
-          const n = edge?.node;
-          const pid = (n?.id || "").toString();
-          const pslug = (n?.slug || "").toString();
-          if (!n || !pid || pslug === slug) continue; // exclude current
-          if (seen.has(pid)) continue;
-          seen.add(pid);
-          out.push({
-            title: n?.name || pslug,
-            price: (n?.price || n?.regularPrice || "$0.00") as string,
-            imageUrl: n?.featuredImage?.node?.sourceUrl || "",
-            rating: 5,
-            slug: pslug,
-          });
-          if (out.length >= 4) break;
-        }
-        if (out.length >= 4) break;
-      }
-      recommendedItems = out;
+  try {
+    // Fetch product by slug
+    const { data: product, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        product_variants (*)
+      `)
+      .eq("slug", slug)
+      .single();
+
+    if (error || !product) {
+      return (
+        <main className="max-w-[1498px] mx-auto md:px-6 px-4 pb-16">
+          <div className="text-center py-12">
+            <p className="text-black/60">Product not found</p>
+          </div>
+        </main>
+      );
     }
+
+    // Build images array
+    const images: string[] = [];
+    if (product.image_url) {
+      images.push(product.image_url);
+    }
+
+    const sellingPrice = product.sale_price ?? product.normal_price;
+
+    // Fetch categories for this product
+    const { data: categoryRelations } = await supabase
+      .from("product_category_relations")
+      .select(`
+        category_id,
+        product_categories (id, name, slug)
+      `)
+      .eq("product_id", product.id);
+
+    const categories = (categoryRelations || [])
+      .map((rel: any) => rel.product_categories)
+      .filter(Boolean)
+      .map((cat: any) => cat.name)
+      .join(", ");
+
+    productData = {
+      id: product.slug || slug,
+      numericId: product.id,
+      title: product.title,
+      price: parseFloat(sellingPrice.toString()),
+      normalPrice: parseFloat(product.normal_price.toString()),
+      salePrice: product.sale_price ? parseFloat(product.sale_price.toString()) : undefined,
+      category: categories || "",
+      description: product.description || "",
+      media: images.map((src) => ({ type: "image" as const, src })),
+      stock: product.stock,
+      variants: (product.product_variants || []).map((v: any) => ({
+        name: v.name,
+        price: parseFloat(v.price.toString()),
+        salePrice: v.sale_price ? parseFloat(v.sale_price.toString()) : undefined,
+      })),
+    };
+
+    // Fetch recommended products (exclude current, limit to 4)
+    const { data: recommended } = await supabase
+      .from("products")
+      .select("*")
+      .neq("id", product.id)
+      .limit(4)
+      .order("created_at", { ascending: false });
+
+    recommendedItems = (recommended || []).map((p) => {
+      const price = p.sale_price ?? p.normal_price;
+      return {
+        title: p.title,
+        price: formatCurrency(parseFloat(price.toString())),
+        imageUrl: p.image_url || "",
+        rating: 5,
+        slug: p.slug || undefined,
+      };
+    });
   } catch (e) {
-    // keep ISR cache; let page render with client fallback
-    throw e;
+    console.error("Error fetching product:", e);
+    return (
+      <main className="max-w-[1498px] mx-auto md:px-6 px-4 pb-16">
+        <div className="text-center py-12">
+          <p className="text-black/60">Error loading product</p>
+        </div>
+      </main>
+    );
   }
 
   return (

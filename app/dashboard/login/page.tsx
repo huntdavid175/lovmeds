@@ -37,7 +37,7 @@ export default function LoginPage() {
       >
         <div className="bg-white rounded-3xl shadow-lg p-8 md:p-10">
           <div className="text-center mb-8">
-            <h1 className="font-heading text-4xl md:text-5xl text-black mb-2 ls-title">
+            <h1 className="font-heading text-3xl md:text-4xl text-black mb-2 ls-title">
               Admin Login
             </h1>
             <p className="text-black/60">Sign in to manage your store</p>

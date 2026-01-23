@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/app/lib/database";
 
 type OrderItem = {
   id: string;
@@ -15,51 +16,17 @@ type Order = {
   orderNumber: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   status: "pending" | "processing" | "completed" | "cancelled";
   total: number;
+  paid: boolean;
   items: OrderItem[];
+  shippingAddress?: any;
+  billingAddress?: any;
+  notes?: string;
   createdAt: string;
 };
 
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-001",
-    customerName: "John Doe",
-    customerEmail: "john@example.com",
-    status: "pending",
-    total: 89.97,
-    items: [
-      { id: "1", productName: "Product A", quantity: 2, price: 29.99 },
-      { id: "2", productName: "Product B", quantity: 1, price: 29.99 },
-    ],
-    createdAt: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-002",
-    customerName: "Jane Smith",
-    customerEmail: "jane@example.com",
-    status: "processing",
-    total: 149.95,
-    items: [
-      { id: "3", productName: "Product C", quantity: 3, price: 49.98 },
-    ],
-    createdAt: "2024-01-14T14:20:00Z",
-  },
-  {
-    id: "3",
-    orderNumber: "ORD-003",
-    customerName: "Bob Johnson",
-    customerEmail: "bob@example.com",
-    status: "completed",
-    total: 59.98,
-    items: [
-      { id: "4", productName: "Product D", quantity: 2, price: 29.99 },
-    ],
-    createdAt: "2024-01-13T09:15:00Z",
-  },
-];
 
 const STATUS_COLORS = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -69,22 +36,127 @@ const STATUS_COLORS = {
 };
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  // Default to table view, cards as secondary
+  const [viewMode, setViewMode] = useState<"cards" | "table">("table");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      // Fetch orders with their items
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (ordersError) throw ordersError;
+
+      // Transform Supabase data to Order format
+      const transformedOrders: Order[] = (ordersData || []).map((order: any) => ({
+        id: order.id,
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        customerEmail: order.customer_email,
+        customerPhone: order.customer_phone,
+        status: order.status as Order["status"],
+        total: parseFloat(order.total.toString()),
+        paid: order.paid || false,
+        shippingAddress: order.shipping_address,
+        billingAddress: order.billing_address,
+        notes: order.notes,
+        items: (order.order_items || []).map((item: any) => ({
+          id: item.id,
+          productName: item.product_name,
+          quantity: item.quantity,
+          price: parseFloat(item.price.toString()),
+        })),
+        createdAt: order.created_at,
+      }));
+
+      setOrders(transformedOrders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      alert("Error loading orders. Please refresh the page.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredOrders =
     filter === "all"
       ? orders
       : orders.filter((order) => order.status === filter);
 
-  const handleStatusChange = (orderId: string, newStatus: Order["status"]) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
+  const handleStatusChange = async (orderId: string, newStatus: Order["status"]) => {
+    try {
+      const currentOrder = orders.find((o) => o.id === orderId);
+
+      // Prevent marking as completed if not paid
+      if (newStatus === "completed" && currentOrder && !currentOrder.paid) {
+        alert("You must mark the order as paid before setting it to completed.");
+        return;
+      }
+
+      // Update order status in Supabase
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      // Update local state
+      setOrders(
+        orders.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+
+      // Update selected order if it's the one being changed
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      alert("Error updating order status. Please try again.");
+    }
+  };
+
+  const handlePaidToggle = async (orderId: string, paid: boolean) => {
+    try {
+      // Update paid status in Supabase
+      const { error } = await supabase
+        .from("orders")
+        .update({ paid })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      // Update local state
+      setOrders(
+        orders.map((order) =>
+          order.id === orderId ? { ...order, paid } : order
+        )
+      );
+
+      // Update selected order if it's the one being changed
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, paid });
+      }
+    } catch (error) {
+      console.error("Error updating paid status:", error);
+      alert("Error updating paid status. Please try again.");
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -106,14 +178,32 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-heading text-4xl md:text-5xl text-black mb-2 ls-title">
+          <h1 className="font-heading text-3xl md:text-4xl text-black mb-1 ls-title">
             Orders
           </h1>
-          <p className="text-black/60">Manage customer orders</p>
+          <p className="text-black/60 text-sm md:text-base">
+            Manage customer orders
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 md:justify-end">
+          <button
+            onClick={fetchOrders}
+            className="h-10 px-4 rounded-xl bg-white border border-black/10 text-black text-sm font-medium hover:bg-black/5 transition-colors cursor-pointer"
+          >
+            🔄 Refresh
+          </button>
         </div>
       </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A33D4A] mx-auto mb-4"></div>
+          <p className="text-black/60">Loading orders...</p>
+        </div>
+      )}
 
       {/* Filters and View Toggle */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
@@ -159,7 +249,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders List - Cards View */}
-      {viewMode === "cards" && (
+      {!isLoading && viewMode === "cards" && (
         <div className="space-y-4">
           {filteredOrders.map((order) => (
           <motion.div
@@ -170,7 +260,7 @@ export default function OrdersPage() {
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-center gap-4 mb-2 flex-wrap">
                   <h3 className="font-heading text-xl text-black">
                     {order.orderNumber}
                   </h3>
@@ -178,6 +268,15 @@ export default function OrdersPage() {
                     className={`px-3 py-1 rounded-lg text-xs font-medium border ${STATUS_COLORS[order.status]}`}
                   >
                     {order.status}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-lg text-xs font-medium border ${
+                      order.paid
+                        ? "bg-green-100 text-green-800 border-green-200"
+                        : "bg-gray-100 text-gray-800 border-gray-200"
+                    }`}
+                  >
+                    {order.paid ? "✓ Paid" : "Unpaid"}
                   </span>
                 </div>
                 <p className="text-black/60 text-sm">
@@ -217,25 +316,40 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                <select
-                  value={order.status}
-                  onChange={(e) =>
-                    handleStatusChange(order.id, e.target.value as Order["status"])
-                  }
-                  className="flex-1 h-10 px-4 rounded-lg border border-black/10 bg-white text-black text-sm focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent cursor-pointer"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <button
-                  onClick={() => setSelectedOrder(order)}
-                  className="px-4 h-10 rounded-lg border border-black/10 text-black text-sm font-medium hover:bg-black/5 transition-colors cursor-pointer"
-                >
-                  View Details
-                </button>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-black/70">Paid:</label>
+                  <button
+                    onClick={() => handlePaidToggle(order.id, !order.paid)}
+                    className={`flex-1 h-10 px-4 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
+                      order.paid
+                        ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {order.paid ? "✓ Mark as Unpaid" : "Mark as Paid"}
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <select
+                    value={order.status}
+                    onChange={(e) =>
+                      handleStatusChange(order.id, e.target.value as Order["status"])
+                    }
+                    className="flex-1 h-10 px-4 rounded-lg border border-black/10 bg-white text-black text-sm focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent cursor-pointer"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <button
+                    onClick={() => setSelectedOrder(order)}
+                    className="px-4 h-10 rounded-lg border border-black/10 text-black text-sm font-medium hover:bg-black/5 transition-colors cursor-pointer"
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -244,7 +358,7 @@ export default function OrdersPage() {
       )}
 
       {/* Orders Table View */}
-      {viewMode === "table" && (
+      {!isLoading && viewMode === "table" && (
         <div className="bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -266,7 +380,7 @@ export default function OrdersPage() {
                     Total
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-black/60 uppercase tracking-wider">
-                    Status
+                    Status / Paid
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-black/60 uppercase tracking-wider">
                     Actions
@@ -310,21 +424,32 @@ export default function OrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            order.id,
-                            e.target.value as Order["status"]
-                          )
-                        }
-                        className={`px-3 py-1 rounded-lg text-xs font-medium border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent ${STATUS_COLORS[order.status]}`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={order.status}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              order.id,
+                              e.target.value as Order["status"]
+                            )
+                          }
+                          className={`px-3 py-1 rounded-lg text-xs font-medium border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent ${STATUS_COLORS[order.status]}`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            order.paid
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {order.paid ? "✓ Paid" : "Unpaid"}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
@@ -342,9 +467,13 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {filteredOrders.length === 0 && (
+      {!isLoading && filteredOrders.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-black/60">No orders found</p>
+          <p className="text-black/60">
+            {orders.length === 0
+              ? "No orders yet. Orders will appear here once customers place them."
+              : "No orders match the selected filter."}
+          </p>
         </div>
       )}
 
@@ -373,11 +502,44 @@ export default function OrdersPage() {
                 <h3 className="text-sm font-medium text-black/50 mb-2">
                   Customer Information
                 </h3>
-                <div className="bg-black/5 rounded-xl p-4">
+                <div className="bg-black/5 rounded-xl p-4 space-y-2">
                   <p className="text-black font-medium">{selectedOrder.customerName}</p>
                   <p className="text-black/60 text-sm">{selectedOrder.customerEmail}</p>
+                  {selectedOrder.customerPhone && (
+                    <p className="text-black/60 text-sm">Phone: {selectedOrder.customerPhone}</p>
+                  )}
                 </div>
               </div>
+
+              {selectedOrder.shippingAddress && (
+                <div>
+                  <h3 className="text-sm font-medium text-black/50 mb-2">
+                    Shipping Address
+                  </h3>
+                  <div className="bg-black/5 rounded-xl p-4">
+                    <p className="text-black text-sm">
+                      {[
+                        selectedOrder.shippingAddress.street,
+                        selectedOrder.shippingAddress.city,
+                        selectedOrder.shippingAddress.region,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {selectedOrder.notes && (
+                <div>
+                  <h3 className="text-sm font-medium text-black/50 mb-2">
+                    Order Notes
+                  </h3>
+                  <div className="bg-black/5 rounded-xl p-4">
+                    <p className="text-black text-sm">{selectedOrder.notes}</p>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h3 className="text-sm font-medium text-black/50 mb-2">
@@ -412,25 +574,42 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">
-                  Order Status
-                </label>
-                <select
-                  value={selectedOrder.status}
-                  onChange={(e) =>
-                    handleStatusChange(
-                      selectedOrder.id,
-                      e.target.value as Order["status"]
-                    )
-                  }
-                  className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent cursor-pointer"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Order Status
+                  </label>
+                  <select
+                    value={selectedOrder.status}
+                    onChange={(e) =>
+                      handleStatusChange(
+                        selectedOrder.id,
+                        e.target.value as Order["status"]
+                      )
+                    }
+                    className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent cursor-pointer"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Payment Status
+                  </label>
+                  <button
+                    onClick={() => handlePaidToggle(selectedOrder.id, !selectedOrder.paid)}
+                    className={`w-full h-12 px-4 rounded-xl border text-sm font-medium transition-colors cursor-pointer ${
+                      selectedOrder.paid
+                        ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {selectedOrder.paid ? "✓ Paid" : "Mark as Paid"}
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>

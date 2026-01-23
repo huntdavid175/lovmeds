@@ -18,15 +18,16 @@ export default function CollectionGridClient({
 }: {
   items: CollectionProduct[];
 }) {
-  const [visible, setVisible] = useState(8);
+  // Show at least 3 rows: 12 items (3 rows × 4 cols on xl screens)
+  const [visible, setVisible] = useState(12);
 
   useEffect(() => {
-    setVisible(8);
+    setVisible(12); // Reset to 12 items (3 rows) when items change
   }, [items]);
 
   return (
     <motion.section
-      className="mt-24"
+      className="mt-24 px-4 md:px-0"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -70,11 +71,11 @@ export default function CollectionGridClient({
         })}
       </motion.div>
 
-      {visible < items.length && (
+      {visible < items.length && items.length > 0 && (
         <div className="mt-10 flex justify-center">
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => setVisible((v) => Math.min(v + 8, items.length))}
+            onClick={() => setVisible((v) => Math.min(v + 12, items.length))}
             className="inline-flex items-center justify-center rounded-full bg-[#A33D4A] text-white px-8 py-4 text-base font-medium transition-colors hover:bg-black"
           >
             Load More
