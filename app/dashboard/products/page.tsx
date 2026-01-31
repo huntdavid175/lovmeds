@@ -133,21 +133,27 @@ export default function ProductsPage() {
   };
 
   const convertGoogleDriveLink = (url: string): string => {
-    if (!url || !url.includes("drive.google.com")) {
-      return url; // Return as-is if not a Google Drive link
+    if (!url || typeof url !== "string") {
+      return url;
     }
 
-    // If it's already in the direct image format, return as-is
-    if (url.includes("uc?export=view&id=")) {
+    // If it's already in a direct image format, return as-is
+    if (url.includes("uc?export=view&id=") || url.includes("thumbnail?id=")) {
+      return url;
+    }
+
+    // Check if it's a Google Drive link
+    if (!url.includes("drive.google.com")) {
       return url;
     }
 
     let fileId = "";
 
     // Pattern 1: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+    // Extract file ID from /file/d/FILE_ID/ pattern
     const pattern1 = /\/file\/d\/([a-zA-Z0-9_-]+)/;
     const match1 = url.match(pattern1);
-    if (match1) {
+    if (match1 && match1[1]) {
       fileId = match1[1];
     }
 
@@ -155,14 +161,26 @@ export default function ProductsPage() {
     if (!fileId) {
       const pattern2 = /[?&]id=([a-zA-Z0-9_-]+)/;
       const match2 = url.match(pattern2);
-      if (match2) {
+      if (match2 && match2[1]) {
         fileId = match2[1];
       }
     }
 
+    // Pattern 3: Try to extract from any URL parameter (fallback)
+    if (!fileId) {
+      const pattern3 = /id=([a-zA-Z0-9_-]+)/;
+      const match3 = url.match(pattern3);
+      if (match3 && match3[1]) {
+        fileId = match3[1];
+      }
+    }
+
     // If we found a file ID, convert to direct image link
+    // Use thumbnail API which is more reliable for embedding
     if (fileId) {
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+      // Thumbnail format is more reliable for embedding images
+      // sz parameter controls size: w1000 = width 1000px
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
     }
 
     // If no pattern matched, return original URL
@@ -619,18 +637,52 @@ export default function ProductsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl p-6 shadow-sm border border-black/5"
           >
-            {product.imageUrl && (
-              <div className="relative w-full h-48 mb-4 rounded-xl overflow-hidden bg-black/5">
+            <div className="relative w-full h-48 mb-4 rounded-xl overflow-hidden bg-[#F7F7F7]">
+              {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
                   alt={product.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const placeholder = target.parentElement?.querySelector('.placeholder-svg');
+                    if (placeholder) {
+                      (placeholder as HTMLElement).style.display = 'block';
+                    }
                   }}
                 />
+              ) : null}
+              <div className={`absolute inset-0 ${product.imageUrl ? 'hidden placeholder-svg' : ''}`}>
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 400 400"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect width="400" height="400" fill="#F7F7F7" />
+                  {/* Pill Capsule */}
+                  <g opacity="0.3" transform="translate(200, 200)">
+                    {/* Left half of pill */}
+                    <ellipse cx="-40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+                    {/* Right half of pill */}
+                    <ellipse cx="40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+                    {/* Center line */}
+                    <line x1="0" y1="-25" x2="0" y2="25" stroke="#A33D4A" strokeWidth="2" />
+                    {/* Small pills around */}
+                    <ellipse cx="-100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                    <ellipse cx="100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                    <ellipse cx="-100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                    <ellipse cx="100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                  </g>
+                  {/* Medical Cross Symbol */}
+                  <g opacity="0.15" transform="translate(200, 200)">
+                    <rect x="-8" y="-30" width="16" height="60" fill="#A33D4A" rx="2" />
+                    <rect x="-30" y="-8" width="60" height="16" fill="#A33D4A" rx="2" />
+                  </g>
+                </svg>
               </div>
-            )}
+            </div>
             <h3 className="font-heading text-xl text-black mb-2">{product.title}</h3>
             <p className="text-black/60 text-sm mb-4 line-clamp-2">
               {product.description}
@@ -781,6 +833,28 @@ export default function ProductsPage() {
                     // Automatically convert Google Drive share links to direct image links
                     const convertedUrl = convertGoogleDriveLink(inputValue);
                     setFormData({ ...formData, imageUrl: convertedUrl });
+                  }}
+                  onPaste={(e) => {
+                    // Handle paste event to ensure conversion happens
+                    // Get the pasted text from clipboard
+                    const pastedText = e.clipboardData.getData('text');
+                    if (pastedText) {
+                      // Small delay to let the input update first, then convert
+                      setTimeout(() => {
+                        const convertedUrl = convertGoogleDriveLink(pastedText);
+                        if (convertedUrl !== pastedText) {
+                          setFormData({ ...formData, imageUrl: convertedUrl });
+                        }
+                      }, 10);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Also convert on blur in case paste didn't trigger properly
+                    const inputValue = e.target.value;
+                    const convertedUrl = convertGoogleDriveLink(inputValue);
+                    if (convertedUrl !== inputValue) {
+                      setFormData({ ...formData, imageUrl: convertedUrl });
+                    }
                   }}
                   placeholder="Paste Google Drive share link (auto-converts to direct link)"
                   className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent"

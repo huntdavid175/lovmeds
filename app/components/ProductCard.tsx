@@ -6,7 +6,7 @@ import { useCart } from "./CartProvider";
 type ProductCardProps = {
   title: string;
   price: string; // formatted with $ for now
-  imageUrl: string;
+  imageUrl?: string;
   rating: number; // 0-5
   hoverCart?: boolean; // when true, stars swap to Add to Cart on hover
   href?: string; // link to product detail for arrow button
@@ -24,15 +24,59 @@ export default function ProductCard({
 }: ProductCardProps) {
   const { addItem } = useCart();
   const priceNum = Number((price || "").replace(/[^0-9.]/g, ""));
+  const PlaceholderSVG = () => (
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 400 400"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="400" height="400" fill="#F7F7F7" />
+      {/* Pill Capsule */}
+      <g opacity="0.3" transform="translate(200, 200)">
+        {/* Left half of pill */}
+        <ellipse cx="-40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+        {/* Right half of pill */}
+        <ellipse cx="40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+        {/* Center line */}
+        <line x1="0" y1="-25" x2="0" y2="25" stroke="#A33D4A" strokeWidth="2" />
+        {/* Small pills around */}
+        <ellipse cx="-100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+        <ellipse cx="100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+        <ellipse cx="-100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+        <ellipse cx="100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+      </g>
+      {/* Medical Cross Symbol */}
+      <g opacity="0.15" transform="translate(200, 200)">
+        <rect x="-8" y="-30" width="16" height="60" fill="#A33D4A" rx="2" />
+        <rect x="-30" y="-8" width="60" height="16" fill="#A33D4A" rx="2" />
+      </g>
+    </svg>
+  );
+
   return (
     <div className="group bg-white rounded-3xl shadow-sm  overflow-hidden p-4 flex flex-col h-full">
-      <div className="relative w-full h-[260px] md:h-[280px] rounded-2xl overflow-hidden">
-        <Image
-          src={imageUrl}
-          alt={title}
-          fill
-          className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-        />
+      <div className="relative w-full h-[260px] md:h-[280px] rounded-2xl overflow-hidden bg-[#F7F7F7]">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+            onError={(e) => {
+              // If image fails to load, show placeholder
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const placeholder = target.parentElement?.querySelector('.placeholder-svg');
+              if (placeholder) {
+                (placeholder as HTMLElement).style.display = 'block';
+              }
+            }}
+          />
+        ) : null}
+        <div className={`absolute inset-0 ${imageUrl ? 'hidden placeholder-svg' : ''}`}>
+          <PlaceholderSVG />
+        </div>
       </div>
       <div className="mt-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -82,7 +126,7 @@ export default function ProductCard({
                       .trim()
                       .replace(/\s+/g, "-"),
                 title,
-                imageUrl,
+                imageUrl: imageUrl || "",
                 price: priceNum,
                 qty: 1,
               })

@@ -1,35 +1,35 @@
 import React from "react";
 import PoliciesTemplate from "../components/template/PoliciesTemplate";
 import type { Metadata } from "next";
-import { gqlRequest } from "../lib/wpClient";
+// import { gqlRequest } from "../lib/wpClient";
 
 export const metadata: Metadata = {
   title: "Terms of Service | LovMeds",
 };
 
-type TermsQuery = {
-  pages?: {
-    edges?: Array<{
-      node?: { id?: string; content?: string | null } | null;
-    }> | null;
-  } | null;
-};
+// type TermsQuery = {
+//   pages?: {
+//     edges?: Array<{
+//       node?: { id?: string; content?: string | null } | null;
+//     }> | null;
+//   } | null;
+// };
 
-const TERMS_QUERY = `
-  query NewQuery {
-    pages(where: {name: "terms of service"}) {
-      edges { node { id content } }
-    }
-  }
-`;
+// const TERMS_QUERY = `
+//   query NewQuery {
+//     pages(where: {name: "terms of service"}) {
+//       edges { node { id content } }
+//     }
+//   }
+// `;
 
 export const revalidate = 3600;
 
 const page = async () => {
   let contentHtml: string | undefined;
   try {
-    const data = await gqlRequest<TermsQuery>(TERMS_QUERY);
-    contentHtml = data?.pages?.edges?.[0]?.node?.content || undefined;
+    // const data = await gqlRequest<TermsQuery>(TERMS_QUERY);
+    // contentHtml = data?.pages?.edges?.[0]?.node?.content || undefined;
   } catch (_) {}
 
   return (

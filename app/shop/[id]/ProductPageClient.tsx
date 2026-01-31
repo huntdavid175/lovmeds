@@ -48,7 +48,7 @@ export default function ProductPageClient({
     if (!productProp) {
       return null;
     }
-    return productProp;
+      return productProp;
   }, [productProp]);
 
   if (!product) {
@@ -150,8 +150,8 @@ export default function ProductPageClient({
                 {/* Desktop: thumbnails on the left of the main image */}
                 <div className="hidden md:grid md:grid-cols-[72px_1fr] gap-4 items-start">
                   {product.media.length > 1 && (
-                    <div className="flex flex-col gap-4">
-                      {product.media.map((m, i) => (
+              <div className="flex flex-col gap-4">
+                {product.media.map((m, i) => (
                   <button
                     key={i}
                     onClick={() => setMainIndex(i)}
@@ -170,44 +170,103 @@ export default function ProductPageClient({
                         className="object-cover"
                       />
                     ) : (
-                      <span className="absolute inset-0 flex items-center justify-center">
-                        <span className="h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center">
-                          ▶
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center">
+                            ▶
+                          </span>
                         </span>
-                      </span>
-                        )}
-                      </button>
-                      ))}
-                    </div>
+                    )}
+                  </button>
+                ))}
+              </div>
                   )}
-                  <motion.div
-                    key={mainIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.35 }}
-                    className={`relative w-full h-[640px] rounded-3xl overflow-hidden bg-black/5 ${
+              <motion.div
+                key={mainIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35 }}
+                    className={`relative w-full h-[640px] rounded-3xl overflow-hidden bg-[#F7F7F7] ${
                       product.media.length > 1 ? "" : "md:col-span-2"
                     }`}
-                  >
-                    {product.media[mainIndex]?.type === "image" ? (
-                      <Image
-                        src={product.media[mainIndex]?.src}
-                        alt={product.title}
-                        fill
-                        className="object-cover"
-                        priority
+              >
+                    {product.media[mainIndex]?.type === "image" && product.media[mainIndex]?.src ? (
+                  <Image
+                    src={product.media[mainIndex]?.src}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    priority
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const placeholder = target.parentElement?.querySelector('.placeholder-svg');
+                          if (placeholder) {
+                            (placeholder as HTMLElement).style.display = 'block';
+                          }
+                        }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-black/40">
-                        No image
-                      </div>
-                    )}
+                    ) : null}
+                    <div className={`absolute inset-0 ${product.media[mainIndex]?.type === "image" && product.media[mainIndex]?.src ? 'hidden placeholder-svg' : ''}`}>
+                      <svg
+                        className="w-full h-full"
+                        viewBox="0 0 400 400"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect width="400" height="400" fill="#F7F7F7" />
+                        {/* Pill Capsule */}
+                        <g opacity="0.3" transform="translate(200, 200)">
+                          {/* Left half of pill */}
+                          <ellipse cx="-40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+                          {/* Right half of pill */}
+                          <ellipse cx="40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+                          {/* Center line */}
+                          <line x1="0" y1="-25" x2="0" y2="25" stroke="#A33D4A" strokeWidth="2" />
+                          {/* Small pills around */}
+                          <ellipse cx="-100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                          <ellipse cx="100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                          <ellipse cx="-100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                          <ellipse cx="100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                        </g>
+                        {/* Medical Cross Symbol */}
+                        <g opacity="0.15" transform="translate(200, 200)">
+                          <rect x="-8" y="-30" width="16" height="60" fill="#A33D4A" rx="2" />
+                          <rect x="-30" y="-8" width="60" height="16" fill="#A33D4A" rx="2" />
+                        </g>
+                      </svg>
+                    </div>
                   </motion.div>
                 </div>
               </>
             ) : (
-              <div className="relative w-full h-[520px] md:h-[640px] rounded-3xl overflow-hidden bg-black/5 flex items-center justify-center">
-                <span className="text-black/40">No image available</span>
+              <div className="relative w-full h-[520px] md:h-[640px] rounded-3xl overflow-hidden bg-[#F7F7F7]">
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 400 400"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect width="400" height="400" fill="#F7F7F7" />
+                  {/* Pill Capsule */}
+                  <g opacity="0.3" transform="translate(200, 200)">
+                    {/* Left half of pill */}
+                    <ellipse cx="-40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+                    {/* Right half of pill */}
+                    <ellipse cx="40" cy="0" rx="40" ry="25" fill="#A33D4A" />
+                    {/* Center line */}
+                    <line x1="0" y1="-25" x2="0" y2="25" stroke="#A33D4A" strokeWidth="2" />
+                    {/* Small pills around */}
+                    <ellipse cx="-100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                    <ellipse cx="100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                    <ellipse cx="-100" cy="30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                    <ellipse cx="100" cy="-30" rx="15" ry="10" fill="#A33D4A" opacity="0.2" />
+                  </g>
+                  {/* Medical Cross Symbol */}
+                  <g opacity="0.15" transform="translate(200, 200)">
+                    <rect x="-8" y="-30" width="16" height="60" fill="#A33D4A" rx="2" />
+                    <rect x="-30" y="-8" width="60" height="16" fill="#A33D4A" rx="2" />
+                  </g>
+                </svg>
               </div>
             )}
           </motion.div>
@@ -218,7 +277,7 @@ export default function ProductPageClient({
             variants={item}
           >
             {product.category && (
-              <p className="text-black/50 text-base mb-2">{product.category}</p>
+            <p className="text-black/50 text-base mb-2">{product.category}</p>
             )}
             <h1 className="font-heading text-4xl md:text-6xl text-black ls-title">
               {product.title}
@@ -243,9 +302,9 @@ export default function ProductPageClient({
               </p>
             )}
             {product.description && (
-              <p className="mt-6 text-black/60 md:text-lg">
-                {product.description}
-              </p>
+            <p className="mt-6 text-black/60 md:text-lg">
+              {product.description}
+            </p>
             )}
 
             {/* Variants */}
