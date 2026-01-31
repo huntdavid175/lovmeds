@@ -131,6 +131,43 @@ export default function ProductsPage() {
       .trim()
       .replace(/\s+/g, "-");
   };
+
+  const convertGoogleDriveLink = (url: string): string => {
+    if (!url || !url.includes("drive.google.com")) {
+      return url; // Return as-is if not a Google Drive link
+    }
+
+    // If it's already in the direct image format, return as-is
+    if (url.includes("uc?export=view&id=")) {
+      return url;
+    }
+
+    let fileId = "";
+
+    // Pattern 1: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+    const pattern1 = /\/file\/d\/([a-zA-Z0-9_-]+)/;
+    const match1 = url.match(pattern1);
+    if (match1) {
+      fileId = match1[1];
+    }
+
+    // Pattern 2: https://drive.google.com/open?id=FILE_ID
+    if (!fileId) {
+      const pattern2 = /[?&]id=([a-zA-Z0-9_-]+)/;
+      const match2 = url.match(pattern2);
+      if (match2) {
+        fileId = match2[1];
+      }
+    }
+
+    // If we found a file ID, convert to direct image link
+    if (fileId) {
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+
+    // If no pattern matched, return original URL
+    return url;
+  };
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -739,14 +776,17 @@ export default function ProductsPage() {
                 <input
                   type="url"
                   value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                  placeholder="https://drive.google.com/uc?export=view&id=YOUR_FILE_ID"
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    // Automatically convert Google Drive share links to direct image links
+                    const convertedUrl = convertGoogleDriveLink(inputValue);
+                    setFormData({ ...formData, imageUrl: convertedUrl });
+                  }}
+                  placeholder="Paste Google Drive share link (auto-converts to direct link)"
                   className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent"
                 />
                 <p className="text-xs text-black/50 mt-1">
-                  Upload to Google Drive and paste the shareable link here
+                  Paste any Google Drive share link - it will automatically convert to a direct image link
                 </p>
                 {formData.imageUrl && (
                   <div className="mt-3 relative w-full h-48 rounded-xl overflow-hidden bg-black/5">
