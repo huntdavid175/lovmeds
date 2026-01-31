@@ -194,6 +194,7 @@ export default function ProductPageClient({
                     src={product.media[mainIndex]?.src}
                     alt={product.title}
                     fill
+                    unoptimized={product.media[mainIndex]?.src.includes('drive.google.com') || product.media[mainIndex]?.src.includes('googleusercontent.com')}
                     className="object-cover"
                     priority
                         onError={(e) => {

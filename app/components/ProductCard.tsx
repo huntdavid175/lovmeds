@@ -62,6 +62,7 @@ export default function ProductCard({
             src={imageUrl}
             alt={title}
             fill
+            unoptimized={imageUrl.includes('drive.google.com') || imageUrl.includes('googleusercontent.com')}
             className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
             onError={(e) => {
               // If image fails to load, show placeholder
