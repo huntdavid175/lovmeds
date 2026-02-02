@@ -28,6 +28,7 @@ type Product = {
   variants: Variant[];
   imageUrl?: string;
   categoryIds?: string[];
+  featured?: boolean;
 };
 
 const MOCK_PRODUCTS: Product[] = [
@@ -113,6 +114,7 @@ export default function ProductsPage() {
         categoryIds: (p.product_category_relations || []).map(
           (r: any) => r.category_id
         ),
+        featured: !!p.featured,
       }));
 
       setProducts(transformedProducts);
@@ -195,6 +197,7 @@ export default function ProductsPage() {
     stock: "",
     imageUrl: "",
     variants: [] as Variant[],
+    featured: false,
   });
 
   const handleOpenForm = (product?: Product) => {
@@ -209,6 +212,7 @@ export default function ProductsPage() {
         stock: product.stock.toString(),
         imageUrl: product.imageUrl || "",
         variants: product.variants,
+        featured: !!product.featured,
       });
       setSelectedCategories(product.categoryIds || []);
     } else {
@@ -222,6 +226,7 @@ export default function ProductsPage() {
         stock: "",
         imageUrl: "",
         variants: [],
+        featured: false,
       });
       setSelectedCategories([]);
     }
@@ -240,6 +245,7 @@ export default function ProductsPage() {
       stock: "",
       imageUrl: "",
       variants: [],
+      featured: false,
     });
     setSelectedCategories([]);
   };
@@ -263,6 +269,7 @@ export default function ProductsPage() {
             cost_price: parseFloat(formData.costPrice),
             stock: parseInt(formData.stock) || 0,
             image_url: formData.imageUrl || null,
+            featured: !!formData.featured,
           })
           .eq("id", editingProduct.id);
 
@@ -315,7 +322,7 @@ export default function ProductsPage() {
             cost_price: parseFloat(formData.costPrice),
             stock: parseInt(formData.stock) || 0,
             image_url: formData.imageUrl || null,
-            featured: false,
+            featured: !!formData.featured,
           })
           .select()
           .single();
@@ -716,6 +723,13 @@ export default function ProductsPage() {
                   {formatCurrency(calculateProfit(product))} ({calculateProfitMargin(product).toFixed(1)}%)
                 </span>
               </div>
+              {product.featured && (
+                <div className="pt-1">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-800 border border-yellow-200">
+                    ★ Featured (Best Seller)
+                  </span>
+                </div>
+              )}
             </div>
             {product.variants.length > 0 && (
               <div className="mb-4">
@@ -922,6 +936,20 @@ export default function ProductsPage() {
                     ))
                   )}
                 </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!formData.featured}
+                    onChange={(e) =>
+                      setFormData({ ...formData, featured: e.target.checked })
+                    }
+                    className="w-4 h-4 rounded border-black/20 text-[#A33D4A] focus:ring-[#A33D4A] cursor-pointer"
+                  />
+                  <span>Mark as featured (show in Best Sellers)</span>
+                </label>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

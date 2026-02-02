@@ -3,10 +3,9 @@ import ProductCard from "@/app/components/ProductCard";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { motion } from "framer-motion";
 import { useCart } from "@/app/components/CartProvider";
-import { checkoutStoreFromForm } from "@/app/actions/woocommerce";
+import { useRouter } from "next/navigation";
 
 type Media = { type: "image" | "video"; src: string };
 
@@ -65,6 +64,7 @@ export default function ProductPageClient({
   const [mainIndex, setMainIndex] = useState(0);
   const [qty, setQty] = useState(1);
   const { addItem } = useCart();
+  const router = useRouter();
 
   const container = {
     hidden: { opacity: 0, y: 24 },
@@ -373,16 +373,22 @@ export default function ProductPageClient({
               >
                 {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
               </button>
-              <form action={checkoutStoreFromForm} className="contents">
-                <input
-                  type="hidden"
-                  name="items"
-                  value={JSON.stringify([
-                    { id: String(product.numericId ?? product.id), qty },
-                  ])}
-                />
-                <CheckoutSubmitButton disabled={product.stock !== undefined && product.stock === 0} />
-              </form>
+              <button
+                onClick={() => {
+                  addItem({
+                    id: String(product.numericId ?? product.id),
+                    title: product.title,
+                    imageUrl: product.media[0]?.src ?? "",
+                    price: displayPrice,
+                    qty,
+                  });
+                  router.push("/checkout");
+                }}
+                disabled={product.stock !== undefined && product.stock === 0}
+                className="h-14 rounded-full bg-black hover:bg-[#111] disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer text-white text-lg transition-colors"
+              >
+                {product.stock === 0 ? "Out of Stock" : "Buy Now"}
+              </button>
             </div>
 
             {/* Ingredients accordion – omitted to keep client file focused */}
@@ -393,44 +399,3 @@ export default function ProductPageClient({
   );
 }
 
-function CheckoutSubmitButton({ disabled }: { disabled?: boolean }) {
-  const { pending } = useFormStatus();
-  const isDisabled = pending || disabled;
-  return (
-    <button
-      type="submit"
-      aria-busy={pending}
-      disabled={isDisabled}
-      className={`h-14 rounded-full text-white text-lg transition-colors ${
-        isDisabled
-          ? "bg-black/70 cursor-not-allowed"
-          : "bg-black hover:bg-[#111] cursor-pointer"
-      } flex items-center justify-center gap-2`}
-    >
-      {pending && (
-        <svg
-          className="animate-spin h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          aria-hidden
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          />
-        </svg>
-      )}
-      <span>{pending ? "Processing..." : "Buy Now"}</span>
-    </button>
-  );
-}
