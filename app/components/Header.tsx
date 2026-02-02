@@ -1,27 +1,63 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "./CartProvider";
+import { supabase } from "../lib/database";
+import PromoBannerClient from "./PromoBannerClient";
+
+type PromoMessage = {
+  message: string;
+  link_url?: string;
+  link_text?: string;
+  background_color: string;
+  text_color: string;
+};
 
 export default function Header() {
   const { open, items } = useCart();
   const count = items.reduce((sum, i) => sum + i.qty, 0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [promo, setPromo] = useState<PromoMessage | null>(null);
+
+  useEffect(() => {
+    const fetchPromo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("promo_messages")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Error fetching promo message:", error);
+        } else if (data) {
+          setPromo(data);
+        }
+      } catch (error) {
+        console.error("Error fetching promo message:", error);
+      }
+    };
+
+    fetchPromo();
+  }, []);
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <header>
-      {/* Top shipping bar */}
-      <motion.div
-        className="bg-[#A33D4A] text-white text-center text-sm py-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-      >
-        Free Shipping on orders $100 or More within Canada and US
-      </motion.div>
+      {/* Promo Banner */}
+      {promo && (
+        <PromoBannerClient
+          message={promo.message}
+          linkUrl={promo.link_url}
+          linkText={promo.link_text}
+          backgroundColor={promo.background_color}
+          textColor={promo.text_color}
+        />
+      )}
 
       {/* Main nav */}
       <motion.div

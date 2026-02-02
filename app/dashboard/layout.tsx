@@ -81,6 +81,7 @@ export default function DashboardLayout({
     { href: "/dashboard/products", label: "Products", icon: "📦" },
     { href: "/dashboard/categories", label: "Categories", icon: "🏷️" },
     { href: "/dashboard/orders", label: "Orders", icon: "📋" },
+    { href: "/dashboard/promo", label: "Promo Message", icon: "📢" },
   ];
 
   return (
