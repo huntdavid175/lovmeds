@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { createClient } from "@/app/lib/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -10,21 +11,36 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // TODO: Add actual authentication logic
-    // For now, just store auth state and redirect to dashboard
-    setTimeout(() => {
-      // Store authentication in localStorage
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message || "Invalid email or password");
+        setLoading(false);
+        return;
+      }
+
+      // Optionally keep localStorage flag so existing layout guard still works
       localStorage.setItem("dashboard_authenticated", "true");
+
       setLoading(false);
       router.push("/dashboard");
-      router.refresh(); // Refresh to update layout
-    }, 1000);
+      router.refresh();
+    } catch (err: any) {
+      console.error("Error during login:", err);
+      setError("Unexpected error during login. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (

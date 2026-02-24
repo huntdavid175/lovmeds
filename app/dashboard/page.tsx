@@ -92,7 +92,9 @@ export default function DashboardOverview() {
     if (orders.length === 0 && products.length === 0) {
       return {
         totalRevenue: 0,
+        todaysRevenue: 0,
         totalSales: 0,
+        todaysSales: 0,
         pendingOrders: 0,
         totalProducts: 0,
         averageOrderValue: 0,
@@ -107,6 +109,23 @@ export default function DashboardOverview() {
       0
     );
 
+    // Today's revenue & sales (completed orders created today)
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const todaysCompleted = completedOrders.filter((o) => {
+      const created = new Date(o.createdAt);
+      return created >= startOfToday;
+    });
+    const todaysRevenue = todaysCompleted.reduce(
+      (sum, order) => sum + order.total,
+      0
+    );
+    const todaysSales = todaysCompleted.length;
+
     const totalSales = completedOrders.length;
 
     const pendingOrders = orders.filter((o) => o.status === "pending").length;
@@ -117,7 +136,6 @@ export default function DashboardOverview() {
       totalSales > 0 ? totalRevenue / totalSales : 0;
 
     // Calculate revenue for last 30 days
-    const now = new Date();
     const thirtyDaysAgo = new Date(
       now.getTime() - 30 * 24 * 60 * 60 * 1000
     );
@@ -133,7 +151,9 @@ export default function DashboardOverview() {
 
     return {
       totalRevenue,
+      todaysRevenue,
       totalSales,
+      todaysSales,
       pendingOrders,
       totalProducts,
       averageOrderValue,
@@ -205,7 +225,9 @@ export default function DashboardOverview() {
           <p className="font-heading text-2xl text-black">
             {formatCurrency(metrics.totalRevenue)}
           </p>
-          <p className="text-xs text-black/40 mt-2">Completed orders</p>
+          <p className="text-xs text-black/40 mt-2">
+            Today: {formatCurrency(metrics.todaysRevenue)}
+          </p>
         </motion.div>
 
         <motion.div
@@ -222,7 +244,9 @@ export default function DashboardOverview() {
           </div>
           <p className="text-sm text-black/60 mb-1">Total Sales</p>
           <p className="font-heading text-2xl text-black">{metrics.totalSales}</p>
-          <p className="text-xs text-black/40 mt-2">Completed orders</p>
+          <p className="text-xs text-black/40 mt-2">
+            Today: {metrics.todaysSales}
+          </p>
         </motion.div>
 
         <motion.div

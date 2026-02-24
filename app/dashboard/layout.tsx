@@ -3,7 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { supabase } from "@/app/lib/database";
+import { createClient } from "@/app/lib/supabase/client";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = createClient();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [hasPendingOrders, setHasPendingOrders] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -156,7 +158,12 @@ export default function DashboardLayout({
             <span className="font-medium">Back to Store</span>
           </Link>
           <button
-            onClick={() => {
+            onClick={async () => {
+              try {
+                await supabase.auth.signOut();
+              } catch (e) {
+                console.error("Error signing out:", e);
+              }
               localStorage.removeItem("dashboard_authenticated");
               router.push("/dashboard/login");
               router.refresh();
@@ -173,6 +180,7 @@ export default function DashboardLayout({
       <main className="md:ml-64 ml-0 p-4 md:p-8 pt-20 md:pt-8">
         {children}
       </main>
+      <SpeedInsights />
     </div>
   );
 }
