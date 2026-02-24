@@ -134,60 +134,6 @@ export default function ProductsPage() {
       .replace(/\s+/g, "-");
   };
 
-  const convertGoogleDriveLink = (url: string): string => {
-    if (!url || typeof url !== "string") {
-      return url;
-    }
-
-    // If it's already in a direct image format, return as-is
-    if (url.includes("uc?export=view&id=") || url.includes("thumbnail?id=")) {
-      return url;
-    }
-
-    // Check if it's a Google Drive link
-    if (!url.includes("drive.google.com")) {
-      return url;
-    }
-
-    let fileId = "";
-
-    // Pattern 1: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-    // Extract file ID from /file/d/FILE_ID/ pattern
-    const pattern1 = /\/file\/d\/([a-zA-Z0-9_-]+)/;
-    const match1 = url.match(pattern1);
-    if (match1 && match1[1]) {
-      fileId = match1[1];
-    }
-
-    // Pattern 2: https://drive.google.com/open?id=FILE_ID
-    if (!fileId) {
-      const pattern2 = /[?&]id=([a-zA-Z0-9_-]+)/;
-      const match2 = url.match(pattern2);
-      if (match2 && match2[1]) {
-        fileId = match2[1];
-      }
-    }
-
-    // Pattern 3: Try to extract from any URL parameter (fallback)
-    if (!fileId) {
-      const pattern3 = /id=([a-zA-Z0-9_-]+)/;
-      const match3 = url.match(pattern3);
-      if (match3 && match3[1]) {
-        fileId = match3[1];
-      }
-    }
-
-    // If we found a file ID, convert to direct image link
-    // Use thumbnail API which is more reliable for embedding
-    if (fileId) {
-      // Thumbnail format is more reliable for embedding images
-      // sz parameter controls size: w1000 = width 1000px
-      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-    }
-
-    // If no pattern matched, return original URL
-    return url;
-  };
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -837,44 +783,19 @@ export default function ProductsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
-                  Image URL (Google Drive Link)
+                  Image URL
                 </label>
                 <input
                   type="url"
                   value={formData.imageUrl}
-                  onChange={(e) => {
-                    const inputValue = e.target.value;
-                    // Automatically convert Google Drive share links to direct image links
-                    const convertedUrl = convertGoogleDriveLink(inputValue);
-                    setFormData({ ...formData, imageUrl: convertedUrl });
-                  }}
-                  onPaste={(e) => {
-                    // Handle paste event to ensure conversion happens
-                    // Get the pasted text from clipboard
-                    const pastedText = e.clipboardData.getData('text');
-                    if (pastedText) {
-                      // Small delay to let the input update first, then convert
-                      setTimeout(() => {
-                        const convertedUrl = convertGoogleDriveLink(pastedText);
-                        if (convertedUrl !== pastedText) {
-                          setFormData({ ...formData, imageUrl: convertedUrl });
-                        }
-                      }, 10);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    // Also convert on blur in case paste didn't trigger properly
-                    const inputValue = e.target.value;
-                    const convertedUrl = convertGoogleDriveLink(inputValue);
-                    if (convertedUrl !== inputValue) {
-                      setFormData({ ...formData, imageUrl: convertedUrl });
-                    }
-                  }}
-                  placeholder="Paste Google Drive share link (auto-converts to direct link)"
+                  onChange={(e) =>
+                    setFormData({ ...formData, imageUrl: e.target.value })
+                  }
+                  placeholder="Paste the public image URL from Supabase Storage"
                   className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#A33D4A] focus:border-transparent"
                 />
                 <p className="text-xs text-black/50 mt-1">
-                  Paste any Google Drive share link - it will automatically convert to a direct image link
+                  Upload images to Supabase Storage and paste the public URL here.
                 </p>
                 {formData.imageUrl && (
                   <div className="mt-3 relative w-full h-48 rounded-xl overflow-hidden bg-black/5">

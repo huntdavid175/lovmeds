@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -59,12 +58,10 @@ export default function SkinConcernsClient({
                 className="block relative rounded-3xl overflow-hidden"
               >
                 <div className="relative h-[300px] md:h-[360px]">
-                  <Image
+                  <img
                     src={c.imageUrl}
                     alt={c.title}
-                    fill
-                    sizes="(max-width:768px) 100vw, 25vw"
-                    className="object-cover blur-[2px] group-hover:blur-none transition-all duration-300 ease-out group-hover:scale-105"
+                    className="w-full h-full object-cover blur-[2px] group-hover:blur-none transition-all duration-300 ease-out group-hover:scale-105"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
                 </div>
