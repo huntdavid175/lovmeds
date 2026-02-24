@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/app/lib/supabase/client";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 export default function DashboardLayout({
   children,
@@ -181,6 +182,7 @@ export default function DashboardLayout({
         {children}
       </main>
       <SpeedInsights />
+      <Analytics/>
     </div>
   );
 }
