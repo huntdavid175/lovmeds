@@ -4,8 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/app/lib/supabase/client";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
+import FacebookPixel from "@/app/components/Facebook/FacebookPixel";
 
 export default function DashboardLayout({
   children,
@@ -21,14 +22,15 @@ export default function DashboardLayout({
 
   useEffect(() => {
     // Check localStorage for authentication
-    const authStatus = localStorage.getItem("dashboard_authenticated") === "true";
+    const authStatus =
+      localStorage.getItem("dashboard_authenticated") === "true";
     setIsAuthenticated(authStatus);
 
     // Redirect to login if not authenticated and not on login page
     if (!authStatus && pathname !== "/dashboard/login") {
       router.push("/dashboard/login");
     }
-    
+
     // Redirect to dashboard if authenticated and on login page
     if (authStatus && pathname === "/dashboard/login") {
       router.push("/dashboard");
@@ -178,11 +180,10 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="md:ml-64 ml-0 p-4 md:p-8 pt-20 md:pt-8">
-        {children}
-      </main>
+      <main className="md:ml-64 ml-0 p-4 md:p-8 pt-20 md:pt-8">{children}</main>
       <SpeedInsights />
-      <Analytics/>
+      <FacebookPixel />
+      <Analytics />
     </div>
   );
 }
