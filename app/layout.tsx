@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Bodoni_Moda } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import { Analytics } from "@vercel/analytics/next";
+import FacebookPixel from "./components/Facebook/FacebookPixel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
       >
         <ClientLayout>{children}</ClientLayout>
         <Analytics />
+        <FacebookPixel />
       </body>
     </html>
   );

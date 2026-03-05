@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/app/lib/supabase/client";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import FacebookPixel from "@/app/components/Facebook/FacebookPixel";
 
 export default function DashboardLayout({
   children,
@@ -182,7 +181,6 @@ export default function DashboardLayout({
       {/* Main content */}
       <main className="md:ml-64 ml-0 p-4 md:p-8 pt-20 md:pt-8">{children}</main>
       <SpeedInsights />
-      <FacebookPixel />
       <Analytics />
     </div>
   );
